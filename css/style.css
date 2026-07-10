@@ -1292,7 +1292,15 @@ body.reduce-motion #welcome-banner.hide{ animation:none; opacity:0; transition:o
 .ob-skip:hover{ color:var(--accent); }
 .ob-skip:focus-visible{ outline:2px solid var(--accent2); outline-offset:2px; }
 
-.ob-pages{ position:relative; flex:1 1 auto; min-height:0; overflow-y:auto; }
+/* overflow-x is forced to a scrollable value here because overflow-y is
+   set (a CSS quirk: setting only one axis promotes the other out of
+   "visible"). .ob-page.on's slide-in animation briefly translates its
+   content past the right edge every time a page is shown, which — with
+   overflow-x uncontrolled — made the browser paint a horizontal
+   scrollbar (a thin "slider") for a single frame on every page change.
+   Pinning overflow-x:hidden keeps the vertical scroller but clips that
+   transient overflow so no scrollbar ever appears. */
+.ob-pages{ position:relative; flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden; }
 .ob-page{ display:none; }
 .ob-page.on{ display:block; animation:obslide .3s ease-out; }
 @keyframes obslide{ from{ transform:translateX(16px); opacity:0; } to{ transform:none; opacity:1; } }
@@ -1512,14 +1520,85 @@ body.reduce-motion #welcome-banner.hide{ animation:none; opacity:0; transition:o
 .panel-hint{ margin-top:18px; font-size:17px; color:rgba(245,239,220,.55); text-align:right; }
 
 .cards{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin:14px 0; }
-.gcard,.tcard{ border:3px solid var(--ui-border); padding:12px; display:flex; flex-direction:column; gap:4px; font-size:20px; }
-.gcard span,.tcard span{ font-size:17px; color:rgba(245,239,220,.6); }
+.tcard{ border:3px solid var(--ui-border); padding:12px; display:flex; flex-direction:column; gap:4px; font-size:20px; }
+.tcard span{ font-size:17px; color:rgba(245,239,220,.6); }
+.tface{ width:54px; height:54px; border:3px solid var(--ink); margin-bottom:6px; }
+.f1{ background:#ffd24a; } .f2{ background:#6ee7a8; } .f3{ background:#8fd3f4; } .f4{ background:#e78bb5; }
+
+/* ---- Games (Castle vault): card grid + dedicated detail page ---- */
+.games-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin:14px 0; }
+.gcard{
+  border:3px solid var(--ui-border); padding:12px; display:flex; flex-direction:column; gap:4px;
+  font-size:20px; font-family:var(--font-body); color:var(--paper); text-align:left;
+  background:rgba(255,255,255,.02); cursor:pointer;
+  transition:border-color .15s ease, transform .15s ease, background .15s ease;
+}
+.gcard:hover, .gcard:focus-visible{ border-color:var(--accent); transform:translateY(-2px); background:rgba(255,255,255,.05); }
+.gcard:focus-visible{ outline:2px solid var(--accent2); outline-offset:2px; }
+.gcard:active{ transform:translateY(0); }
+.gcard-body{ display:flex; flex-direction:column; gap:4px; }
+.gcard-body b{ font-size:20px; }
+.gcard-body span{ font-size:17px; color:rgba(245,239,220,.6); }
 .gart{ height:70px; margin-bottom:8px; border:3px solid var(--ink); }
 .g1{ background:linear-gradient(135deg,#16324a,#ffd24a 130%); }
 .g2{ background:linear-gradient(135deg,#2a2050,#8fd3f4 130%); }
 .g3{ background:repeating-linear-gradient(45deg,#111 0 10px,#1c1c28 10px 20px); }
-.tface{ width:54px; height:54px; border:3px solid var(--ink); margin-bottom:6px; }
-.f1{ background:#ffd24a; } .f2{ background:#6ee7a8; } .f3{ background:#8fd3f4; } .f4{ background:#e78bb5; }
+.g4{ background:linear-gradient(135deg,#2a5040,#e78bb5 130%); }
+.g5{ background:linear-gradient(135deg,#402a50,#6ee7a8 130%); }
+
+.gstatus{
+  align-self:flex-start; margin-top:2px;
+  font-family:var(--font-display); font-size:9px; letter-spacing:1px;
+  color:var(--ink); background:var(--accent2); padding:4px 7px 3px;
+}
+
+.game-detail{ margin-top:4px; }
+.game-back{
+  font-family:var(--font-display); font-size:10px; letter-spacing:1px;
+  color:rgba(245,239,220,.75); background:transparent; border:none;
+  cursor:pointer; padding:4px 2px 14px; margin-bottom:6px;
+}
+.game-back:hover{ color:var(--accent); }
+.game-back:focus-visible{ outline:2px solid var(--accent2); outline-offset:2px; }
+.gdetail-hero{
+  height:150px; border:3px solid var(--ink); margin-bottom:14px;
+  box-shadow:0 6px 0 rgba(0,0,0,.4);
+}
+.gdetail-head{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.gdetail-head h3{ font-family:var(--font-display); font-size:clamp(14px,3vw,19px); font-weight:normal; margin:0; }
+.gdetail-genre{ font-size:16px; color:var(--accent2); letter-spacing:.5px; margin:8px 0 0; }
+.gdetail-tagline{ font-size:19px; color:rgba(245,239,220,.75); margin:4px 0 0; font-style:italic; }
+.gdetail-desc{ font-size:21px; line-height:1.45; margin:14px 0; color:rgba(245,239,220,.9); }
+.gdetail-block{ margin:16px 0; }
+.gdetail-block h4{
+  font-family:var(--font-display); font-size:11px; letter-spacing:1px;
+  color:var(--accent); margin:0 0 10px;
+}
+.gdetail-features{ list-style:none; display:flex; flex-direction:column; gap:8px; }
+.gdetail-features li{
+  font-size:19px; padding-left:18px; position:relative; color:rgba(245,239,220,.85);
+}
+.gdetail-features li::before{ content:"▸"; position:absolute; left:0; color:var(--accent2); }
+.gplat-row{ display:flex; flex-wrap:wrap; gap:8px; }
+.gplat{
+  font-size:15px; padding:5px 10px; border:2px solid var(--ui-border);
+  color:rgba(245,239,220,.75);
+}
+
+/* ---- posts tabs (Space Station) — filter the feed by game ---- */
+.posts-tabs{
+  display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 4px;
+  padding-bottom:14px; border-bottom:2px dashed rgba(245,239,220,.18);
+}
+.ptab{
+  font-family:var(--font-display); font-size:10px; letter-spacing:1px;
+  color:rgba(245,239,220,.7); background:transparent;
+  border:2px solid var(--ui-border); cursor:pointer;
+  padding:8px 11px 7px; transition:border-color .15s ease, color .15s ease, background .15s ease;
+}
+.ptab:hover{ color:var(--paper); border-color:rgba(245,239,220,.5); }
+.ptab:focus-visible{ outline:2px solid var(--accent2); outline-offset:2px; }
+.ptab.on{ color:var(--ink); background:var(--accent); border-color:var(--accent); }
 
 .contact-list{ list-style:none; margin:14px 0; }
 .contact-list li{
@@ -1760,12 +1839,24 @@ body.reduce-motion *::after{
   .contact-list span{ flex:1 1 100%; text-align:left; font-size:17px; }
 
   /* team/games cards: 2-up so faces aren't giant, single col only if tiny */
-  .cards{ grid-template-columns:repeat(2, 1fr); gap:10px; }
   .cards.team{ grid-template-columns:repeat(2, 1fr); }
-  .gcard, .tcard{ padding:9px; font-size:16px; }
-  .gcard span, .tcard span{ font-size:14px; }
-  .gart{ height:54px; }
+  .tcard{ padding:9px; font-size:16px; }
+  .tcard span{ font-size:14px; }
   .tface{ width:44px; height:44px; }
+
+  .games-grid{ grid-template-columns:repeat(2, 1fr); gap:10px; }
+  .gcard{ padding:9px; font-size:16px; }
+  .gcard-body b{ font-size:16px; }
+  .gcard-body span{ font-size:13px; }
+  .gart{ height:54px; }
+  .gdetail-hero{ height:100px; }
+  .gdetail-desc{ font-size:17px; }
+  .gdetail-features li{ font-size:16px; }
+  .gdetail-tagline{ font-size:16px; }
+
+  .posts-tabs{ gap:6px; margin:8px 0 2px; padding-bottom:12px; }
+  .ptab{ font-size:9px; padding:7px 9px 6px; }
+
   .post{ padding:14px; }
   .post h3{ font-size:19px; }
   .post p{ font-size:17px; }

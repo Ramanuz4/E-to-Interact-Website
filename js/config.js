@@ -18,26 +18,88 @@ ETI.CONFIG = {
      Video (YouTube):
        { type: "video", date: "2026-07-01", title: "Gameplay reveal",
          youtube: "dQw4w9WgXcQ",            // just the video ID
+         game: "lantern",                    // id from GAMES below (optional)
          text: "Optional caption." }
 
      Image:
        { type: "image", date: "2026-06-20", title: "New key art",
          src: "assets/posts/keyart.png",     // drop files in assets/posts/
+         game: "skybound",
          text: "Optional caption." }
 
      Text / announcement:
        { type: "text", date: "2026-06-01", title: "Devlog #1",
+         game: "lantern",
          text: "Anything you want to say." }
+
+     `game` should match an id from GAMES below so the post shows up
+     under that game's tab in the Posts section. Leave it out (or set
+     it to null) for general studio news — those posts only appear
+     under the "All" tab.
      ============================================================ */
   POSTS: [
+    { type: "text", date: "2026-07-05", title: "Skybound — dash tuning",
+      game: "skybound",
+      text: "Placeholder devlog. Spent the week on dash-cancel timing so chained air dashes feel snappier." },
     { type: "video", date: "2026-07-01", title: "Project Lantern — first look",
       youtube: "YOUR_VIDEO_ID",
+      game: "lantern",
       text: "Two minutes of raw gameplay from the cave levels. More soon." },
+    { type: "text", date: "2026-06-25", title: "Something's stirring",
+      game: "secret",
+      text: "Placeholder teaser. We're not ready to show this one yet — but it's real, and it's coming." },
     { type: "image", date: "2026-06-18", title: "Skybound key art",
       src: "assets/posts/example.png",
+      game: "skybound",
       text: "Concept art for the floating islands. (Replace this image in assets/posts/.)" },
+    { type: "text", date: "2026-06-10", title: "Project Lantern — devlog #2",
+      game: "lantern",
+      text: "Placeholder devlog. The lantern's light radius now reacts to how deep you are — darker caves, warmer glow." },
     { type: "text", date: "2026-06-02", title: "The station is online",
       text: "This is our posts feed. Trailers, devlogs, screenshots and upcoming-game news will all land here first." }
+  ],
+
+  /* ============================================================
+     GAMES — the Castle vault
+     ------------------------------------------------------------
+     Each game gets its own card in the Games grid and its own
+     dedicated detail page. Add/remove entries freely; `id` is what
+     POSTS use in their `game` field to link posts to a title.
+
+     `art` reuses one of the .g1 / .g2 / .g3 placeholder art blocks
+     from style.css — add more (.g4, .g5...) if you add more games.
+     ============================================================ */
+  GAMES: [
+    { id: "lantern", title: "Project Lantern", tagline: "Cozy cave-crawler",
+      status: "In development", genre: "Adventure · Exploration", art: "g1",
+      summary: "A lantern-lit descent through hand-carved caverns, told one warm pool of light at a time.",
+      description: "Placeholder description — swap this in config.js. Project Lantern follows a small light-keeper mapping a cave system that grows stranger the deeper you go. Expect slow exploration, environmental puzzles, and a soundtrack that breathes with the caves.",
+      features: [
+        "Hand-painted pixel biomes",
+        "Physics-based lantern light you carry and place",
+        "Branching cave routes with optional detours",
+        "Original ambient score that shifts with depth"
+      ],
+      platforms: ["PC", "Mac"] },
+
+    { id: "skybound", title: "Skybound", tagline: "Vertical platformer",
+      status: "Prototype", genre: "Platformer · Momentum", art: "g2",
+      summary: "Climb, dash and grapple between drifting islands, racing a storm that never quite catches you.",
+      description: "Placeholder description — swap this in config.js. Skybound is built around momentum: chained dashes, wall-runs and a grapple line across floating islands, with the storm line behind you always closing the gap.",
+      features: [
+        "Momentum-based movement — dash, wall-run, grapple",
+        "Procedurally arranged island routes",
+        "Time-trial and story modes",
+        "Co-op race mode (planned)"
+      ],
+      platforms: ["PC", "Switch (planned)"] },
+
+    { id: "secret", title: "Untitled Secret", tagline: "???",
+      status: "Under wraps", genre: "???", art: "g3",
+      summary: "We're not ready to talk about this one yet.",
+      description: "Placeholder description — swap this in config.js once you're ready to reveal what this is.",
+      features: [],
+      platforms: [] }
   ],
 
   /* ---------- SECRET CODE (W W S S A D A D) ---------- */

@@ -280,44 +280,136 @@
     body.innerHTML = "";
     const tpl = document.getElementById(section.content);
     if (tpl) body.appendChild(tpl.content.cloneNode(true));
-    const feed = body.querySelector("#posts-feed");
-    if (feed) renderPosts(feed);
+    if (body.querySelector("#games-grid")) renderGames(body);
+    if (body.querySelector("#posts-tabs")) renderPostsSection(body);
     panelEl.classList.remove("hidden");
     panelOpen = true;
   };
 
-  function renderPosts(feed) {
-    const posts = C.POSTS || [];
-    if (!posts.length) {
-      feed.innerHTML = '<p class="fine">No transmissions yet. Check back soon.</p>';
+  /* ---------- GAMES — grid of cards, each opening its own detail page ---------- */
+  function renderGames(root) {
+    const grid = root.querySelector("#games-grid");
+    const detail = root.querySelector("#game-detail");
+    const games = C.GAMES || [];
+
+    if (!games.length) {
+      grid.innerHTML = '<p class="fine">No games announced yet. Check back soon.</p>';
       return;
     }
-    for (const p of posts) {
-      const card = document.createElement("article");
-      card.className = "post post-" + p.type;
 
-      let media = "";
-      if (p.type === "video" && p.youtube) {
-        media = `<div class="post-video"><iframe
-          src="https://www.youtube-nocookie.com/embed/${p.youtube}"
-          title="${p.title || "Video"}" frameborder="0" loading="lazy"
-          allow="accelerometer; encrypted-media; picture-in-picture"
-          allowfullscreen></iframe></div>`;
-      } else if (p.type === "image" && p.src) {
-        media = `<img class="post-img" src="${p.src}" alt="${p.title || "Post image"}" loading="lazy"
-                  onerror="this.classList.add('missing')">`;
-      }
-
+    grid.innerHTML = "";
+    games.forEach(g => {
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = "gcard";
       card.innerHTML =
-        `<header>
-           <span class="post-type">${p.type === "video" ? "▶ VIDEO" : p.type === "image" ? "◫ IMAGE" : "✦ POST"}</span>
-           <span class="post-date">${p.date || ""}</span>
-         </header>
-         <h3>${p.title || ""}</h3>
-         ${media}
-         ${p.text ? `<p>${p.text}</p>` : ""}`;
-      feed.appendChild(card);
+        `<div class="gart ${g.art || ""}"></div>
+         <div class="gcard-body">
+           <b>${g.title || ""}</b>
+           <span>${g.tagline || ""}</span>
+           ${g.status ? `<span class="gstatus">${g.status}</span>` : ""}
+         </div>`;
+      card.addEventListener("click", () => openDetail(g.id));
+      grid.appendChild(card);
+    });
+
+    function openDetail(id) {
+      const g = games.find(x => x.id === id);
+      if (!g) return;
+      detail.innerHTML = detailHTML(g);
+      grid.classList.add("hidden");
+      detail.classList.remove("hidden");
+      const back = detail.querySelector(".game-back");
+      if (back) back.addEventListener("click", () => {
+        detail.classList.add("hidden");
+        grid.classList.remove("hidden");
+      });
     }
+
+    function detailHTML(g) {
+      const features = (g.features || []).map(f => `<li>${f}</li>`).join("");
+      const platforms = (g.platforms || []).map(p => `<span class="gplat">${p}</span>`).join("");
+      return (
+        `<button type="button" class="game-back">‹ All Games</button>
+         <div class="gdetail-hero ${g.art || ""}"></div>
+         <div class="gdetail-head">
+           <h3>${g.title || ""}</h3>
+           ${g.status ? `<span class="gstatus">${g.status}</span>` : ""}
+         </div>
+         ${g.genre ? `<div class="gdetail-genre">${g.genre}</div>` : ""}
+         ${g.tagline ? `<p class="gdetail-tagline">${g.tagline}</p>` : ""}
+         <p class="gdetail-desc">${g.description || g.summary || "More details coming soon."}</p>` +
+        (features ? `<div class="gdetail-block"><h4>Features</h4><ul class="gdetail-features">${features}</ul></div>` : "") +
+        (platforms ? `<div class="gdetail-block"><h4>Platforms</h4><div class="gplat-row">${platforms}</div></div>` : "") +
+        `<p class="fine">Placeholder content — swap in real screenshots, trailers and copy in config.js.</p>`
+      );
+    }
+  }
+
+  /* ---------- POSTS — tabbed by game ---------- */
+  function renderPostsSection(root) {
+    const tabsWrap = root.querySelector("#posts-tabs");
+    const feed = root.querySelector("#posts-feed");
+    const games = C.GAMES || [];
+    const posts = C.POSTS || [];
+    const tabs = [{ id: "all", title: "All" }].concat(games.map(g => ({ id: g.id, title: g.title })));
+    let active = "all";
+
+    function renderTabs() {
+      tabsWrap.innerHTML = "";
+      if (tabs.length < 2) { tabsWrap.classList.add("hidden"); return; }
+      tabs.forEach(t => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "ptab" + (t.id === active ? " on" : "");
+        btn.textContent = t.title;
+        btn.addEventListener("click", () => {
+          if (active === t.id) return;
+          active = t.id;
+          renderTabs();
+          renderFeed();
+        });
+        tabsWrap.appendChild(btn);
+      });
+    }
+
+    function renderFeed() {
+      const list = active === "all" ? posts : posts.filter(p => p.game === active);
+      feed.innerHTML = "";
+      if (!list.length) {
+        feed.innerHTML = '<p class="fine">No transmissions for this game yet. Check back soon.</p>';
+        return;
+      }
+      for (const p of list) {
+        const card = document.createElement("article");
+        card.className = "post post-" + p.type;
+
+        let media = "";
+        if (p.type === "video" && p.youtube) {
+          media = `<div class="post-video"><iframe
+            src="https://www.youtube-nocookie.com/embed/${p.youtube}"
+            title="${p.title || "Video"}" frameborder="0" loading="lazy"
+            allow="accelerometer; encrypted-media; picture-in-picture"
+            allowfullscreen></iframe></div>`;
+        } else if (p.type === "image" && p.src) {
+          media = `<img class="post-img" src="${p.src}" alt="${p.title || "Post image"}" loading="lazy"
+                    onerror="this.classList.add('missing')">`;
+        }
+
+        card.innerHTML =
+          `<header>
+             <span class="post-type">${p.type === "video" ? "▶ VIDEO" : p.type === "image" ? "◫ IMAGE" : "✦ POST"}</span>
+             <span class="post-date">${p.date || ""}</span>
+           </header>
+           <h3>${p.title || ""}</h3>
+           ${media}
+           ${p.text ? `<p>${p.text}</p>` : ""}`;
+        feed.appendChild(card);
+      }
+    }
+
+    renderTabs();
+    renderFeed();
   }
   function closePanel() { panelEl.classList.add("hidden"); panelOpen = false; }
   panelEl.addEventListener("click", (e) => { if (e.target === panelEl) closePanel(); });

@@ -360,10 +360,9 @@
   </template>
 
   <template id="content-games">
-    <div class="cards">
-      <div class="gcard"><div class="gart g1"></div><b>Project Lantern</b><span>Cozy cave-crawler · In development</span></div>
-      <div class="gcard"><div class="gart g2"></div><b>Skybound</b><span>Vertical platformer · Prototype</span></div>
-      <div class="gcard"><div class="gart g3"></div><b>Untitled Secret</b><span>???</span></div>
+    <div class="games-wrap" id="games-wrap">
+      <div class="games-grid" id="games-grid"></div>
+      <div class="game-detail hidden" id="game-detail"></div>
     </div>
     <p class="fine">Press G anywhere in the world to travel back here.</p>
   </template>
@@ -380,6 +379,7 @@
 
   <template id="content-posts">
     <p class="fine feed-intro">Trailers, devlogs, screenshots and upcoming games — newest first. Press P anywhere in the world to travel back here.</p>
+    <div class="posts-tabs" id="posts-tabs"></div>
     <div id="posts-feed"></div>
   </template>
 
