@@ -1864,7 +1864,7 @@ body.reduce-motion *::after{
   .sign .sub{
     font-size:15px; letter-spacing:1px;
     padding:5px 12px 3px; margin-top:40px;
-    max-width:min(78vw, 320px);
+    max-width:min(62vw, 240px);
     line-height:1.25;
   }
   #prompt{ font-size:18px; }
@@ -1899,8 +1899,8 @@ body.touch #dialogue{
   body.touch #top-actions{ top:calc(120px + env(safe-area-inset-top)); right:calc(12px + env(safe-area-inset-right)); }
   body.touch #top-actions .tkey{ width:50px; height:32px; }
   body.touch #shortcut-keys{ top:calc(206px + env(safe-area-inset-top)); right:calc(12px + env(safe-area-inset-right)); gap:5px; }
-  #shortcut-keys .tkey{ width:92px; height:28px; }
-  #shortcut-keys .tkey .lbl{ font-size:10px; }
+  #shortcut-keys .tkey{ width:72px; height:26px; }
+  #shortcut-keys .tkey .lbl{ font-size:9px; letter-spacing:.3px; }
   body.touch #dialogue{ bottom:calc(156px + env(safe-area-inset-bottom)); }
 }
 @media (max-height:600px){
@@ -1908,6 +1908,10 @@ body.touch #dialogue{
   #joystick{ width:104px; height:104px; }
   #joy-knob{ width:44px; height:44px; margin:-22px 0 0 -22px; }
   .tkey.big{ width:58px; height:58px; }
+  /* On short landscape screens there's no room for the shortcut column
+     without it colliding with the action buttons — hide it; MAP still gives
+     full fast-travel access to every land. */
+  body.touch #shortcut-keys{ display:none; }
 }
 
 
