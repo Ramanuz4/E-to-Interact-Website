@@ -71,7 +71,7 @@ ETI.CONFIG = {
      ============================================================ */
   GAMES: [
     { id: "lantern", title: "Project Lantern", tagline: "Cozy cave-crawler",
-      status: "In development", genre: "Adventure · Exploration", art: "g1",
+      status: "", genre: "Adventure · Exploration", art: "g1",
       summary: "A lantern-lit descent through hand-carved caverns, told one warm pool of light at a time.",
       description: "Placeholder description — swap this in config.js. Project Lantern follows a small light-keeper mapping a cave system that grows stranger the deeper you go. Expect slow exploration, environmental puzzles, and a soundtrack that breathes with the caves.",
       features: [
@@ -83,7 +83,7 @@ ETI.CONFIG = {
       platforms: ["PC", "Mac"] },
 
     { id: "skybound", title: "Skybound", tagline: "Vertical platformer",
-      status: "Prototype", genre: "Platformer · Momentum", art: "g2",
+      status: "", genre: "Platformer · Momentum", art: "g2",
       summary: "Climb, dash and grapple between drifting islands, racing a storm that never quite catches you.",
       description: "Placeholder description — swap this in config.js. Skybound is built around momentum: chained dashes, wall-runs and a grapple line across floating islands, with the storm line behind you always closing the gap.",
       features: [
@@ -95,7 +95,7 @@ ETI.CONFIG = {
       platforms: ["PC", "Switch (planned)"] },
 
     { id: "secret", title: "Untitled Secret", tagline: "???",
-      status: "Under wraps", genre: "???", art: "g3",
+      status: "", genre: "???", art: "g3",
       summary: "We're not ready to talk about this one yet.",
       description: "Placeholder description — swap this in config.js once you're ready to reveal what this is.",
       features: [],

@@ -257,13 +257,13 @@ body[data-biome="space"] .star{
   position:absolute; left:50%; bottom:-6px; transform:translateX(-50%);
   width:40px; height:10px; background:rgba(0,0,0,.28); border-radius:50%;
 }
-.npc{ animation:npcbob 2.4s ease-in-out infinite; }
+/* NPCs stand still when idle (no constant bob). They give a brief nod only
+   while actively talking, which is a purposeful interaction cue. */
 .npc.talking{ animation:npcbob .35s ease-in-out 2; }
 .npc.near .npc-body::after{
   content:""; position:absolute; top:-8px; left:50%; transform:translateX(-50%);
   width:8px; height:8px; background:var(--accent2); border-radius:50%;
   box-shadow:0 0 10px rgba(110,231,168,.75);
-  animation:promptbob .9s ease-in-out infinite;
 }
 @keyframes npcbob{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-3px); } }
 
@@ -779,14 +779,8 @@ body:not([data-time="night"]) .bird{ opacity:1; transition:opacity 2s ease; }
 }
 
 /* Idle look-around — NPCs subtly shift their shadow to hint at a glance */
-@keyframes npcblink{
-  0%,94%,100%{ filter:brightness(1); }
-  96%{ filter:brightness(1.15); }
-}
-/* Apply the blink on alternating NPCs at different timing so they feel independent */
-.npc:nth-child(3n+1) .npc-body{ animation:npcblink 7s 1.2s ease-in-out infinite; }
-.npc:nth-child(3n+2) .npc-body{ animation:npcblink 9s 3.5s ease-in-out infinite; }
-.npc:nth-child(3n)   .npc-body{ animation:npcblink 11s 0.8s ease-in-out infinite; }
+/* (NPC idle brightness-blink removed — it repainted every NPC constantly,
+   which cost performance, and NPCs should stand still when idle.) */
 
 /* ---- travel portal: a small purple black hole ----
    Size scales with the viewport so it has the same proportional impact on
@@ -1730,23 +1724,23 @@ body.touch #touch-controls{
 
 body.touch #top-actions{
   display:flex; flex-direction:column; gap:7px;
-  position:fixed; top:calc(92px + env(safe-area-inset-top)); right:calc(16px + env(safe-area-inset-right)); z-index:26;
+  position:fixed; top:calc(126px + env(safe-area-inset-top)); right:calc(16px + env(safe-area-inset-right)); z-index:26;
 }
 #top-actions .tkey{ width:52px; height:34px; }
 #top-actions .tkey b{ font-size:8px; }
 
-/* shortcut keycaps (H G T P C) — right column below ESC/MAP, touch only */
+/* shortcut keycaps — right column below ESC/MAP, touch only */
 #shortcut-keys{ display:none; }
 body.touch #shortcut-keys{
   display:flex; flex-direction:column; gap:6px;
-  position:fixed; top:calc(184px + env(safe-area-inset-top)); right:calc(16px + env(safe-area-inset-right)); z-index:26;
+  position:fixed; top:calc(218px + env(safe-area-inset-top)); right:calc(16px + env(safe-area-inset-right)); z-index:26;
 }
 #shortcut-keys .tkey{
-  flex-direction:row; justify-content:flex-start; gap:7px;
+  flex-direction:row; justify-content:center; gap:0;
   width:100px; height:30px; padding:0 9px;
 }
-#shortcut-keys .tkey b{ font-size:10px; color:var(--paper); }
-#shortcut-keys .tkey .lbl{ font-size:9px; color:rgba(245,239,220,.72); font-style:normal; letter-spacing:.5px; }
+#shortcut-keys .tkey b{ display:none; }
+#shortcut-keys .tkey .lbl{ font-size:11px; color:var(--paper); font-style:normal; letter-spacing:.5px; }
 #shortcut-keys .tkey:active .lbl, #shortcut-keys .tkey.on .lbl{ color:var(--ink); }
 
 body.touch #hint-bar{ display:none; }
@@ -1805,7 +1799,7 @@ body.reduce-motion *::after{
   #clock{ width:58px; height:58px; top:calc(12px + env(safe-area-inset-top)); right:calc(12px + env(safe-area-inset-right)); }
   .dial .half{ font-size:22px; }
   .time-badge{ font-size:6px; bottom:-20px; padding:3px 6px 2px; }
-  body.touch #top-actions{ top:calc(84px + env(safe-area-inset-top)); right:calc(12px + env(safe-area-inset-right)); }
+  body.touch #top-actions{ top:calc(120px + env(safe-area-inset-top)); right:calc(12px + env(safe-area-inset-right)); }
 
   #dialogue{
     width:min(560px, 94vw);
@@ -1902,12 +1896,11 @@ body.touch #dialogue{
   .tkey.big{ width:64px; height:64px; }
   .tkey.big b{ font-size:19px; }
   .tkey.wide{ width:64px; height:36px; }
-  body.touch #top-actions{ top:calc(88px + env(safe-area-inset-top)); right:calc(12px + env(safe-area-inset-right)); }
+  body.touch #top-actions{ top:calc(120px + env(safe-area-inset-top)); right:calc(12px + env(safe-area-inset-right)); }
   body.touch #top-actions .tkey{ width:50px; height:32px; }
-  body.touch #shortcut-keys{ top:calc(170px + env(safe-area-inset-top)); right:calc(12px + env(safe-area-inset-right)); gap:5px; }
+  body.touch #shortcut-keys{ top:calc(206px + env(safe-area-inset-top)); right:calc(12px + env(safe-area-inset-right)); gap:5px; }
   #shortcut-keys .tkey{ width:92px; height:28px; }
-  #shortcut-keys .tkey b{ font-size:9px; }
-  #shortcut-keys .tkey .lbl{ font-size:8px; }
+  #shortcut-keys .tkey .lbl{ font-size:10px; }
   body.touch #dialogue{ bottom:calc(156px + env(safe-area-inset-bottom)); }
 }
 @media (max-height:600px){
