@@ -25,6 +25,7 @@
     <div class="sub" id="sky-night-a"></div>
     <div class="sub" id="sky-night-b"></div>
   </div>
+  <div id="sky-moon" aria-hidden="true"></div>
   <div id="stars"></div>
 
   <!-- ============ WORLD (one tall column) ============ -->
@@ -58,6 +59,8 @@
 
   <!-- ============ ATMOSPHERE ============ -->
   <canvas id="particles"></canvas>
+  <div id="night-tint"></div>
+  <div id="time-flash"></div>
   <div id="darkness"></div>
   <div id="lantern"></div>
   <div id="vignette"></div>
@@ -70,7 +73,8 @@
       <span class="reload-icon">↻</span>
     </button>
 
-    <button id="clock" title="Day / Night" aria-label="Toggle day and night">
+    <button id="clock" title="Day / Night" aria-label="Toggle day and night" data-time-active="day">
+      <div class="time-badge" id="time-badge" aria-hidden="true">DAY</div>
       <div class="dial" id="clock-dial">
         <div class="half sun">☀</div>
         <div class="half moon">☾</div>
@@ -110,6 +114,13 @@
     </div>
   </div>
 
+  <!-- ============ WELCOME BANNER (one-time studio intro, right after spawn) ============ -->
+  <div id="welcome-banner" class="hidden" role="status">
+    <div class="wb-badge">E TO INTERACT</div>
+    <p>Welcome to <b>E to Interact</b> — an indie game studio dedicated to designing worlds, building games, and creating unforgettable interactive experiences.</p>
+    <p class="wb-sub">Explore our world, discover our work, and enjoy your journey.</p>
+  </div>
+
   <!-- ============ ONBOARDING (after Enter screen, before spawn) ============ -->
   <div id="onboard" class="hidden">
     <div class="ob-card">
@@ -122,7 +133,7 @@
       <div class="ob-pages kb-only">
         <div class="ob-page" data-badge="WELCOME">
           <h2>Welcome to the world</h2>
-          <p>This whole site is one tall game world. You explore it as <b>Vaugn</b>, our ghost guide — walking land to land instead of scrolling a page.</p>
+          <p>This whole site is one tall game world. You explore it as <b>Vaugn</b>, our ghost mascot — walking land to land instead of scrolling a page.</p>
           <div class="ob-art">🌲 🏰 🏠 🛰 ☁</div>
           <p class="ob-fine">Five lands stack from the ground up: Forest, Castle, Studio, Space Station and Sky Temple.</p>
         </div>
@@ -164,9 +175,16 @@
         </div>
         <div class="ob-page" data-badge="DAY &amp; NIGHT">
           <h2>Turn the clock</h2>
-          <p>Top-right there's a <b>clock</b> that slowly turns on its own. Click it to flip between <b>day</b> and <b>night</b> — the sky, lighting, stars and mood of every land shift with it.</p>
-          <div class="ob-art">☀ &nbsp;⇄&nbsp; ☾</div>
-          <p class="ob-fine">You'll see the corner clock spin and the whole world change. Give it a click once you're in!</p>
+          <p>Top-right there's a <b>clock</b> — sun on top, moon on bottom. It slowly turns on its own, or <b>click it</b> to instantly flip between <b>day</b> and <b>night</b>.</p>
+          <div class="ob-clockdemo">
+            <div class="ob-clock-face">
+              <div class="ob-half sun on">☀</div>
+              <div class="ob-half moon">☾</div>
+            </div>
+            <div class="ob-clock-label" id="ob-clock-label-kb">DAY</div>
+          </div>
+          <p>The active face lights up — the <b>DAY</b> or <b>NIGHT</b> badge glows below the clock. The whole world shifts: sky colour, stars, lanterns, fireflies, glowing screens and more.</p>
+          <p class="ob-fine">Try it once you're in the world. Settings → <b>Auto day/night cycle</b> lets you stop the clock turning on its own.</p>
         </div>
       </div>
 
@@ -174,7 +192,7 @@
       <div class="ob-pages touch-only">
         <div class="ob-page" data-badge="WELCOME">
           <h2>Welcome to the world</h2>
-          <p>This whole site is one tall game world. You explore it as <b>Vaugn</b>, our ghost guide — walking land to land instead of scrolling.</p>
+          <p>This whole site is one tall game world. You explore it as <b>Vaugn</b>, our ghost mascot — walking land to land instead of scrolling.</p>
           <div class="ob-art">🌲 🏰 🏠 🛰 ☁</div>
           <p class="ob-fine">Five lands stack up: Forest, Castle, Studio, Space Station and Sky Temple.</p>
         </div>
@@ -211,9 +229,16 @@
         </div>
         <div class="ob-page" data-badge="DAY &amp; NIGHT">
           <h2>Turn the clock</h2>
-          <p>Top-right there's a <b>clock</b> that slowly turns on its own. Tap it to flip between <b>day</b> and <b>night</b> — the sky, stars and lighting of every land shift with it.</p>
-          <div class="ob-art">☀ &nbsp;⇄&nbsp; ☾</div>
-          <p class="ob-fine">Give it a tap once you're exploring!</p>
+          <p>Top-right there's a <b>clock</b> — sun on top, moon on bottom. It turns slowly on its own, or <b>tap it</b> to instantly flip between <b>day</b> and <b>night</b>.</p>
+          <div class="ob-clockdemo">
+            <div class="ob-clock-face">
+              <div class="ob-half sun on">☀</div>
+              <div class="ob-half moon">☾</div>
+            </div>
+            <div class="ob-clock-label">DAY</div>
+          </div>
+          <p>The <b>DAY</b> or <b>NIGHT</b> badge below the clock shows which mode is active. The whole world shifts: sky, stars, lanterns, fireflies, and glowing screens.</p>
+          <p class="ob-fine">Give it a tap once you're exploring. Menu → Settings can stop the auto cycle.</p>
         </div>
       </div>
 

@@ -11,8 +11,10 @@
   const promptEl = document.getElementById("prompt");
   const promptLabel = document.getElementById("prompt-label");
   const darknessEl = document.getElementById("darkness");
+  const nightTintEl = document.getElementById("night-tint");
   const fadeEl = document.getElementById("fade");
   const lanternEl = document.getElementById("lantern");
+  const welcomeBannerEl = document.getElementById("welcome-banner");
 
   ETI.world.build();
 
@@ -25,6 +27,11 @@
   let secretBuffer = [];
   let secretDone = false;
   let doorInteractable = null;
+  // Hysteresis for the idle<->walk switch: starting needs a slightly
+  // bigger push than stopping needs to settle, so input noise near the
+  // threshold (analog drift, a light tap) can't flicker the mascot
+  // between idle and walking every frame.
+  let movingLatched = false;
 
   // one unique arrival line per zone (lands + crossings)
   const enterLines = {};
@@ -45,7 +52,7 @@
   }
   var _camApplied = null;
   function applyCamera() {
-    const v = -camY | 0;
+    const v = Math.round(-camY);
     if (v === _camApplied) return;   // no write when the camera is still
     _camApplied = v;
     worldEl.style.transform = `translate3d(0, ${v}px, 0)`;
@@ -171,10 +178,11 @@
       M.setState("idle");
       ETI.dialogue.say([
         "Hey! Welcome to E to Interact.",
-        "I'm Vaugn — your guide.",
+        "I'm Vaugn — your ghost mascot.",
         "Let's explore."
       ], () => {
         mode = "play";
+        showWelcomeBanner();
       });
     }
     // expose so a keypress during the walk-in can skip straight to dialogue
@@ -184,6 +192,27 @@
       M.pos.x += 4.5;
       if (M.pos.x >= 0) beginDialogue();
     }, 16);
+  }
+
+  /* ============================================================
+     WELCOME BANNER — a one-time, non-blocking studio intro card.
+     Fades in the instant Vaugn hands control to the player, holds
+     for a few seconds, then fades itself out. It never reads input
+     and sits pointer-events:none (see style.css), so it can't get
+     in the way of movement, interaction, or any other HUD element.
+     ============================================================ */
+  let welcomeBannerShown = false;
+  function showWelcomeBanner() {
+    if (welcomeBannerShown || !welcomeBannerEl) return;
+    welcomeBannerShown = true;
+    welcomeBannerEl.classList.remove("hidden");
+    setTimeout(() => {
+      welcomeBannerEl.classList.add("hide");
+      setTimeout(() => {
+        welcomeBannerEl.classList.add("hidden");
+        welcomeBannerEl.classList.remove("hide");
+      }, 600); // matches the welcomeout animation duration
+    }, 4600); // total time the banner stays fully visible
   }
 
   /* ============================================================
@@ -336,19 +365,19 @@
     const show = nearest && mode === "play" && !ETI.dialogue.isBlocking &&
                  !ETI.ui.pauseOpen && !ETI.ui.panelOpen && !ETI.ui.devOpen;
 
-    // highlighted sign — only touch the DOM when it actually changes
-    const wantSign = (show && nearest.el && nearest.el.classList.contains("sign")) ? nearest.el : null;
-    if (wantSign !== _nearSignEl) {
+    // highlighted interactable — only touch the DOM when it actually changes
+    const wantNear = (show && nearest.el) ? nearest.el : null;
+    if (wantNear !== _nearSignEl) {
       if (_nearSignEl) _nearSignEl.classList.remove("near");
-      if (wantSign) wantSign.classList.add("near");
-      _nearSignEl = wantSign;
+      if (wantNear) wantNear.classList.add("near");
+      _nearSignEl = wantNear;
     }
 
     if (show) {
       if (_promptHidden) { promptEl.classList.remove("hidden"); _promptHidden = false; }
       promptLabel.textContent = nearest.label;
       const screenY = M.pos.y - camY;
-      promptEl.style.transform = `translate(calc(-50% + ${M.pos.x | 0}px), ${(screenY - 46) | 0}px)`;
+      promptEl.style.transform = `translate(calc(-50% + ${Math.round(M.pos.x)}px), ${Math.round(screenY - 46)}px)`;
     } else if (!_promptHidden) {
       promptEl.classList.add("hidden");
       _promptHidden = true;
@@ -360,6 +389,7 @@
      every other crossing has its own light and particles.
      ============================================================ */
   let _darkPrev = -1;
+  let _tintPrev = -1;
   function updateZoneFx(zone, cy) {
     // Torch-darkness ramps in with depth into the stairwell, so there's
     // no snap at the border — it fades over the first/last ~340px.
@@ -381,15 +411,27 @@
       lanternEl.style.setProperty("--lx", sx + "px");
       lanternEl.style.setProperty("--ly", sy + "px");
     }
+
+    // global night tint (eased with sky crossfade)
+    const tint = ETI.world.timeMix * 0.24;
+    if (nightTintEl && Math.abs(tint - _tintPrev) > 0.004) {
+      nightTintEl.style.opacity = tint;
+      _tintPrev = tint;
+      document.documentElement.style.setProperty("--time-mix", ETI.world.timeMix);
+    }
   }
 
   /* ============================================================
      INPUT
      ============================================================ */
   const handled = new Set(["w", "a", "s", "d", "e", "c", "g", "h", "t", "p", " ", "escape", "enter", "shift"]);
+  // Onboarding tells players "arrow keys work too" — normalize them to
+  // their WASD equivalents right here so movement, menus and the secret
+  // code all treat them identically, with no special-casing downstream.
+  const arrowToWASD = { arrowup: "w", arrowdown: "s", arrowleft: "a", arrowright: "d" };
 
   window.addEventListener("keydown", (ev) => {
-    const k = ev.key.toLowerCase();
+    const k = arrowToWASD[ev.key.toLowerCase()] || ev.key.toLowerCase();
     if (handled.has(k)) ev.preventDefault();
 
     if (mode === "boot") { if (k === "e") startFromBoot(); return; }
@@ -432,7 +474,7 @@
   });
 
   window.addEventListener("keyup", (ev) => {
-    const k = ev.key.toLowerCase();
+    const k = arrowToWASD[ev.key.toLowerCase()] || ev.key.toLowerCase();
     keys.delete(k === "shift" ? "shift" : k);
   });
 
@@ -441,15 +483,18 @@
      Virtual keycaps mirror the keyboard exactly (WASD, E, SHIFT,
      ESC, MAP) so the control theme survives on any device.
      ============================================================ */
-  // Touch UI only on real touch devices in a phone/tablet-sized viewport.
-  // Requires a coarse primary pointer AND no hover AND actual touch points —
-  // desktops (even hybrid/touchscreen laptops with a mouse) stay on keyboard.
+  // Touch UI only on real touch-primary devices — desktops (even hybrid
+  // touchscreen laptops with a mouse) stay on keyboard. We deliberately
+  // don't gate this on viewport width: large tablets in landscape (an
+  // iPad Pro is ~1366px wide there) are still touch-only devices with no
+  // keyboard, and excluding them left the player stuck with no controls
+  // at all. The CSS hard-gate for (hover:hover)+(pointer:fine) below
+  // still protects genuine desktops/mice regardless of screen size.
   function evalTouch() {
     const coarse = window.matchMedia("(pointer: coarse)").matches;
     const noHover = window.matchMedia("(hover: none)").matches;
     const hasTouch = (navigator.maxTouchPoints || 0) > 0;
-    const smallish = window.innerWidth <= 1024;
-    const on = coarse && noHover && hasTouch && smallish;
+    const on = coarse && noHover && hasTouch;
     document.body.classList.toggle("touch", on);
     return on;
   }
@@ -618,7 +663,14 @@
       M.pos.y = Math.max(80, Math.min(ETI.world.totalHeight - 140, M.pos.y + vy * dt));
       M.pos.x = Math.max(-260, Math.min(260, M.pos.x + vx * dt));
 
-      const moving = Math.abs(vx) > 6 || Math.abs(vy) > 6;
+      // Hysteresis instead of one fixed threshold: a bigger push is
+      // needed to start walking than to settle back to idle, so hovering
+      // right at the edge (stick drift, a feather-light key tap) can't
+      // make the state flicker back and forth.
+      const speedMag = Math.max(Math.abs(vx), Math.abs(vy));
+      if (movingLatched) { if (speedMag < 4) movingLatched = false; }
+      else { if (speedMag > 10) movingLatched = true; }
+      const moving = movingLatched;
       M.setSprinting(sprint && moving);
 
       // Moving = walking; holding Shift while moving = running.
@@ -627,10 +679,12 @@
       } else {
         M.setState("idle");
       }
+      M.setMotion(vx, vy);
 
     } else if (mode !== "boot" && mode !== "intro" && mode !== "portal") {
       M.setState("idle");
       M.setSprinting(false);
+      M.setMotion(0, 0);
     }
 
     /* --- camera (smooth follow) --- */

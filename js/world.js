@@ -10,7 +10,10 @@
 
   const zones = [];         // {y0, y1, biome, id, name}
   const interactables = []; // {y, label, action, el}
+  const npcLineIndex = {};  // rotating dialogue per NPC
   let totalHeight = 0;
+  let timeMix = 0;                 // 0 = day, 1 = night (eased) — exported for overlays
+  let timeEase = 0.9;              // per-second lerp; bumped briefly on manual toggle
 
   /* ---------- decor helpers ---------- */
   function d(cls, styles) {
@@ -18,6 +21,130 @@
     e.className = "decor " + cls;
     Object.assign(e.style, styles);
     return e;
+  }
+
+  /** Simple pixel NPC — CSS shapes, idle bob, talk on E. */
+  function makeNPC(npc) {
+    const el = document.createElement("div");
+    el.className = "npc npc-" + (npc.kind || "folk");
+    el.dataset.npc = npc.id;
+    const body = document.createElement("div");
+    body.className = "npc-body";
+    el.appendChild(body);
+    el.appendChild(d("npc-shadow", {}));
+    return el;
+  }
+
+  function talkToNPC(npc, el) {
+    const lines = npc.lines || [];
+    if (!lines.length) return;
+    const i = (npcLineIndex[npc.id] || 0) % lines.length;
+    npcLineIndex[npc.id] = i + 1;
+    // Show as a proper dialogue line with NPC name, not just a toast
+    // so it uses the dialogue box and feels like a real exchange
+    if (ETI.dialogue) {
+      ETI.dialogue.toast(npc.name + ":  \"" + lines[i] + "\"", 3600);
+    }
+    el.classList.remove("talking");
+    void el.offsetWidth;
+    el.classList.add("talking");
+  }
+
+  function placeNPCs() {
+    const list = C.NPCS || [];
+    for (const npc of list) {
+      const zone = zones.find(z => z.id === npc.zone || z.biome === npc.zone);
+      if (!zone) continue;
+      const sec = worldEl.querySelector('[data-biome="' + zone.biome + '"]') ||
+                  worldEl.querySelector('[data-biome="' + zone.id + '"]');
+      if (!sec) continue;
+      const h = zone.y1 - zone.y0;
+      const top = h * npc.y;
+      const el = makeNPC(npc);
+      el.style.left = "calc(50% + " + npc.x + "px)";
+      el.style.top = top + "px";
+      sec.appendChild(el);
+      interactables.push({
+        y: zone.y0 + top + 44,
+        label: "Talk — " + npc.name,
+        el: el,
+        action: () => talkToNPC(npc, el)
+      });
+    }
+  }
+
+  function addAmbient(sec, biome, h) {
+    const add = (el) => sec.appendChild(el);
+    switch (biome) {
+      case "spawn": {
+        // Lantern on a post
+        const lantern = d("lantern-post", { left: "calc(50% + 150px)", top: h * 0.5 + "px" });
+        lantern.appendChild(d("lantern-glow", {}));
+        add(lantern);
+        // Stump with a small axe silhouette
+        add(d("stump", { left: "calc(50% - 155px)", top: h * 0.68 + "px" }));
+        // Second small lantern post further right
+        const lantern2 = d("lantern-post", { left: "calc(50% - 190px)", top: h * 0.44 + "px", transform: "scale(.7)", transformOrigin: "bottom center" });
+        lantern2.appendChild(d("lantern-glow", {}));
+        add(lantern2);
+        break;
+      }
+      case "forest": {
+        // Bird pecking in the undergrowth
+        add(d("bird", { left: "calc(50% - 70px)", top: h * 0.82 + "px" }));
+        add(d("fern", { left: "14%", top: h * 0.78 + "px" }));
+        add(d("fern f2", { right: "18%", top: h * 0.8 + "px" }));
+        add(d("fern", { left: "46%", top: h * 0.88 + "px" }));
+        // Fireflies (hidden until night via CSS)
+        const ff = (cls, left, top, dx, dy, dx2, dy2) => {
+          const el = d("firefly " + cls, { left, top });
+          el.style.setProperty("--fdx", dx + "px");
+          el.style.setProperty("--fdy", dy + "px");
+          el.style.setProperty("--fdx2", dx2 + "px");
+          el.style.setProperty("--fdy2", dy2 + "px");
+          return el;
+        };
+        add(ff("", "22%", h * 0.6 + "px", 18, -22, -8, 12));
+        add(ff("ff2", "38%", h * 0.7 + "px", -14, -18, 10, 8));
+        add(ff("ff3", "62%", h * 0.65 + "px", 22, -14, -12, 18));
+        add(ff("ff4", "74%", h * 0.72 + "px", -10, -28, 14, -6));
+        break;
+      }
+      case "castle": {
+        add(d("cat", { left: "calc(50% + 90px)", top: h * 0.72 + "px" }));
+        add(d("barrel", { left: "6%", top: h * 0.62 + "px" }));
+        // Second barrel, slightly behind
+        add(d("barrel", { left: "8.5%", top: h * 0.65 + "px", opacity: ".7", transform: "scale(.8)", transformOrigin: "bottom center" }));
+        // Wall-mounted torches glow at night
+        add(d("torch-wall", { left: "calc(50% - 200px)", top: h * 0.62 + "px" }));
+        add(d("torch-wall", { left: "calc(50% + 188px)", top: h * 0.62 + "px" }));
+        break;
+      }
+      case "studio": {
+        add(d("mug", { left: "calc(50% - 30px)", top: h * 0.38 + "px" }));
+        add(d("cable", { left: "calc(50% + 80px)", top: h * 0.55 + "px" }));
+        // Second mug with slightly different rotation
+        add(d("mug", { left: "calc(50% + 100px)", top: h * 0.42 + "px", transform: "rotate(-12deg)" }));
+        // Sticky note (small coloured square on whiteboard area)
+        add(d("sticky", { left: "calc(50% - 52px)", top: h * 0.28 + "px" }));
+        add(d("sticky s2", { left: "calc(50% - 30px)", top: h * 0.27 + "px" }));
+        break;
+      }
+      case "space": {
+        add(d("cable-run", { left: "calc(50% - 60px)", top: h * 0.35 + "px" }));
+        // Warning light: blinking dot on wall
+        add(d("warn-light", { left: "calc(50% - 160px)", top: h * 0.44 + "px" }));
+        add(d("warn-light wl2", { left: "calc(50% + 150px)", top: h * 0.38 + "px" }));
+        break;
+      }
+      case "temple": {
+        add(d("mote", { left: "calc(50% - 60px)", top: h * 0.4 + "px" }));
+        add(d("mote m2", { left: "calc(50% + 40px)", top: h * 0.48 + "px" }));
+        // Third mote (slightly smaller, different drift)
+        add(d("mote m3", { left: "calc(50% + 10px)", top: h * 0.32 + "px" }));
+        break;
+      }
+    }
   }
 
   function decorate(sec, biome, h) {
@@ -41,7 +168,6 @@
         add(fire);
         add(d("rock", { left: "calc(50% + 120px)", top: h * 0.66 + "px" }));
         add(d("rock r2", { left: "calc(50% - 120px)", top: h * 0.72 + "px" }));
-        add(d("logpost", { left: "calc(50% + 150px)", top: h * 0.5 + "px" }));
         add(d("bush", { right: "10%", top: h * 0.68 + "px" }));
         add(d("bush", { left: "6%", top: h * 0.6 + "px" }));
         add(d("tree t3", { right: "18%", top: h * 0.38 + "px" }));
@@ -134,6 +260,7 @@
         break;
       }
     }
+    addAmbient(sec, biome, h);
   }
 
   /* ---------- build ---------- */
@@ -188,6 +315,7 @@
         if (t.id === "bridge") {
           sec.appendChild(d("lamp", { top: h * 0.2 + "px", left: "calc(50% - 210px)" }));
           sec.appendChild(d("lamp", { top: h * 0.65 + "px", left: "calc(50% + 200px)" }));
+          sec.appendChild(d("rod-rack", { top: h * 0.38 + "px", left: "calc(50% + 130px)" }));
         }
         if (t.id === "skybridge") {
           sec.appendChild(d("cloud", { top: h * 0.2 + "px", left: "12%" }));
@@ -218,6 +346,7 @@
 
     totalHeight = y;
     worldEl.style.height = totalHeight + "px";
+    placeNPCs();
   }
 
   /* ---------- biome / sky ---------- */
@@ -229,7 +358,6 @@
     night: document.getElementById("sky-night")
   };
   let currentBiome = "";
-  let timeMix = 0;                 // 0 = day, 1 = night (eased)
   let _blendPrev = -1, _mixPrev = -1;
   const bgCache = {};              // avoid restyling every frame
 
@@ -289,13 +417,25 @@
       }
 
       const targetMix = document.body.dataset.time === "night" ? 1 : 0;
-      timeMix += (targetMix - timeMix) * Math.min(1, dt * 0.9);
+      timeMix += (targetMix - timeMix) * Math.min(1, dt * timeEase);
       if (Math.abs(targetMix - timeMix) < 0.003) timeMix = targetMix;
       if (Math.abs(timeMix - _mixPrev) > 0.004) {
         skyEls.night.style.opacity = timeMix;
         _mixPrev = timeMix;
       }
     },
+
+    onTimeChange(t, manual) {
+      if (manual) {
+        // Faster ease on manual toggle so the world responds quickly to a click
+        timeEase = 3.2;
+        clearTimeout(ETI.world._easeTimer);
+        ETI.world._easeTimer = setTimeout(() => { timeEase = 0.9; }, (C.timeTransitionSeconds || 2.8) * 1000);
+      }
+      document.documentElement.style.setProperty("--time-mix", timeMix);
+    },
+
+    get timeMix() { return timeMix; },
 
     /** Returns the zone if the biome changed this frame, else null.
         Accepts an optional precomputed zone to avoid a second lookup. */

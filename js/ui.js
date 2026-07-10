@@ -43,34 +43,91 @@
      ============================================================ */
   const dial = document.getElementById("clock-dial");
   const clockBtn = document.getElementById("clock");
+  const timeBadge = document.getElementById("time-badge");
+  const timeFlash = document.getElementById("time-flash");
   let angle = 0;            // degrees
   let spinTo = null;        // target angle when clicked
   let autoCycle = true;
+  let manualSpin = false;
+  let flashTimer = null;
 
   function timeFromAngle(a) {
     return ((a % 360) + 360) % 360 < 180 ? "day" : "night";
   }
 
-  function applyTime(t) {
+  function updateClockChrome(t) {
+    clockBtn.dataset.timeActive = t;
+    if (timeBadge) {
+      timeBadge.textContent = t === "night" ? "NIGHT" : "DAY";
+      timeBadge.dataset.time = t;
+    }
+    clockBtn.setAttribute("aria-label",
+      (t === "night" ? "Night mode — click for day" : "Day mode — click for night"));
+  }
+
+  function flashTime(t) {
+    if (!timeFlash) return;
+    timeFlash.dataset.time = t;
+    timeFlash.classList.add("on");
+    clearTimeout(flashTimer);
+    flashTimer = setTimeout(() => timeFlash.classList.remove("on"), 720);
+  }
+
+  // Day/night toast messages — one is picked at random each time for variety
+  const nightToasts = [
+    "Night falls — stars wake up and lanterns flicker on.",
+    "The clock turns to night. Find the fireflies in the Forest.",
+    "Dark skies. The orbs at the temple glow brighter now.",
+    "Night mode. The world gets quieter — and a little more alive."
+  ];
+  const dayToasts = [
+    "Sun rises — the world brightens.",
+    "Daytime. Birds are back, smoke drifts from the campfire.",
+    "Morning. The sky clears and the trees come alive.",
+    "Back to day. The clock keeps turning."
+  ];
+
+  function applyTime(t, opts) {
+    opts = opts || {};
     if (document.body.dataset.time !== t) {
       document.body.dataset.time = t;
-      // sky eases day<->night per-frame in world.updateSky
+      updateClockChrome(t);
+      if (opts.flash) flashTime(t);
+      if (opts.toast && ETI.dialogue) {
+        const pool = t === "night" ? nightToasts : dayToasts;
+        const msg = pool[Math.floor(Math.random() * pool.length)];
+        ETI.dialogue.toast(msg, 2600);
+      }
+      if (timeBadge) {
+        timeBadge.classList.remove("pulse");
+        void timeBadge.offsetWidth;
+        timeBadge.classList.add("pulse");
+      }
+      if (ETI.world && ETI.world.onTimeChange) ETI.world.onTimeChange(t, !!opts.manual);
     }
   }
 
+  updateClockChrome(document.body.dataset.time || "day");
+
   clockBtn.addEventListener("click", () => {
-    // spin forward to the middle of the next half
     const base = Math.floor(angle / 180) * 180;
-    spinTo = base + 180 + 90; // land mid-half so auto-cycle doesn't flip right back
-    ETI.dialogue.toast(timeFromAngle(spinTo) === "night"
-      ? "Turning the clock... good night."
-      : "Turning the clock... rise and shine.", 1800);
+    const next = timeFromAngle(base + 180);
+    spinTo = base + 180 + 90;
+    manualSpin = true;
+    clockBtn.classList.add("is-spinning");
+    applyTime(next, { flash: true, toast: true, manual: true });
   });
 
   function tickClock(dt) {
     if (spinTo !== null) {
-      angle += (spinTo - angle) * Math.min(1, dt * 5);
-      if (Math.abs(spinTo - angle) < 0.5) { angle = spinTo; spinTo = null; }
+      const ease = manualSpin ? 7.5 : 5;
+      angle += (spinTo - angle) * Math.min(1, dt * ease);
+      if (Math.abs(spinTo - angle) < 0.5) {
+        angle = spinTo;
+        spinTo = null;
+        clockBtn.classList.remove("is-spinning");
+        manualSpin = false;
+      }
     } else if (autoCycle) {
       angle += (360 / C.cycleSeconds) * dt;
     }
@@ -280,7 +337,7 @@
   function closeDev() { devOpen = false; devEl.classList.add("hidden"); }
   function devSelect() {
     const item = devItems()[devSel].dataset.dev;
-    if (item === "video") window.open(C.devVideoURL, "_blank");
+    if (item === "video") window.open(C.devVideoURL, "_blank", "noopener,noreferrer");
     else closeDev();
   }
   devItems().forEach((li, i) => {

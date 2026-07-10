@@ -65,6 +65,12 @@
 
     /** Non-blocking toast (e.g. "Traveling... → Games"). */
     toast(line, ms) {
+      // A toast must never steal the box from an active blocking
+      // conversation — it would null out that conversation's onDone
+      // callback (e.g. the intro's "hand control back to the player"
+      // step, or the secret door reveal) and softlock the game. Blocking
+      // dialogue always wins; the toast is simply skipped.
+      if (blocking && !box.classList.contains("hidden")) return;
       clearTimeout(toastTimer);
       queue = [];
       onDone = null;

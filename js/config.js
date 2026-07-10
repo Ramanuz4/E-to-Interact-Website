@@ -49,6 +49,92 @@ ETI.CONFIG = {
 
   /* ---------- DAY / NIGHT ---------- */
   cycleSeconds: 120,  // one full clock rotation (auto cycle)
+  timeTransitionSeconds: 2.8,  // sky/atmosphere ease duration on manual toggle
+
+  /* ---------- WORLD NPCs — ambient storytellers (sparse, one per land) ---------- */
+  NPCS: [
+    /* — Spawn — */
+    { id: "camper", zone: "spawn", x: -195, y: 0.56, name: "Camper", kind: "hiker",
+      lines: [
+        "First climb? The trail above leads into the Forest.",
+        "That clock in the corner flips the whole world between day and night. Try it.",
+        "I come down here to reset. The campfire never goes out.",
+        "At night the stars come out. Worth stopping to look up."
+      ] },
+
+    /* — Forest — */
+    { id: "forager", zone: "forest", x: 210, y: 0.74, name: "Forager", kind: "ranger",
+      lines: [
+        "Quiet steps — the mushrooms here only glow after dark.",
+        "The Forest sign up ahead tells our story. Worth a read.",
+        "I've walked this treeline a hundred times. Still find something new.",
+        "At night the fireflies come out. If you flip the clock, you'll see them."
+      ] },
+    { id: "scout", zone: "forest", x: -190, y: 0.44, name: "Scout", kind: "scout",
+      lines: [
+        "I map these woods in all weathers. Day and night look like different worlds.",
+        "Castle's above the tree line. Just follow the trail.",
+        "See that fallen log? I've used it as a seat for three seasons now."
+      ] },
+
+    /* — Castle — */
+    { id: "guard", zone: "castle", x: -175, y: 0.58, name: "Guard", kind: "guard",
+      lines: [
+        "Halt... oh, it's you. The Games vault is through the gate.",
+        "The banners only look still. Wind off the river keeps them honest.",
+        "Night watch is longer, but the torches make fine company.",
+        "Press G anywhere to jump straight back here."
+      ] },
+    { id: "merchant", zone: "castle", x: 200, y: 0.66, name: "Merchant", kind: "merchant",
+      lines: [
+        "Everything's on display. Nothing's for sale yet.",
+        "Games need time to cook. These are still in the oven.",
+        "Come back after we ship. The vault fills up quick."
+      ] },
+
+    /* — Studio — */
+    { id: "dev", zone: "studio", x: 175, y: 0.48, name: "Dev", kind: "coder",
+      lines: [
+        "Ship day or ship night — we compile either way.",
+        "The arcade cabinet? Yeah, it still boots. Barely.",
+        "Whiteboard's out of date. The code isn't.",
+        "Night shift hits different. The monitors glow brighter when everything else goes dark."
+      ] },
+    { id: "designer", zone: "studio", x: -180, y: 0.62, name: "Designer", kind: "scholar",
+      lines: [
+        "Every pixel placed on purpose. Mostly.",
+        "The poster up there? I painted it at 2am. Best work I've done.",
+        "Press T if you want to meet the whole team properly.",
+        "Day mode's great for design. Night mode's great for everything else."
+      ] },
+
+    /* — Space — */
+    { id: "pilot", zone: "space", x: -160, y: 0.54, name: "Pilot", kind: "pilot",
+      lines: [
+        "Orbit's quiet. Good place to broadcast what we're building.",
+        "That planet drifts by every few hours. I still wave.",
+        "Console lights blink whether it's day or night up here. Spooky.",
+        "Press P to see everything we've posted so far."
+      ] },
+
+    /* — Temple — */
+    { id: "keeper", zone: "temple", x: 140, y: 0.62, name: "Keeper", kind: "mystic",
+      lines: [
+        "Few make the whole climb. You did.",
+        "The floating isles below? They're not decoration. They're old foundations.",
+        "At night the orbs hum louder. Listen when the clock turns.",
+        "The contact sign is just ahead. We actually read everything."
+      ] },
+
+    /* — Crossings — */
+    { id: "angler", zone: "bridge", x: 165, y: 0.42, name: "Angler", kind: "angler",
+      lines: [
+        "Mist off the river. Fish don't mind.",
+        "Lamps on the bridge stay lit when the clock says night.",
+        "Castle's just past here. Mind the planks — they're older than they look.",
+        "On a clear night you can see the stars reflected in the water."
+      ] }
+  ],
 
   /* ============================================================
      VAUGN'S ANIMATIONS
