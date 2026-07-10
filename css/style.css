@@ -1233,17 +1233,51 @@ body[data-time="night"] #vignette{
   to{ opacity:0; transform:translate(-50%, -14px); }
 }
 @media (max-width:760px){
+  /* Sit the welcome popup in the open band between the Contact shortcut
+     button (which ends near the top-right) and the joystick (bottom-left),
+     instead of up top where it overlapped the shortcut column. Centered in
+     that lower-middle gap and narrowed so it never slips under the buttons. */
   #welcome-banner{
-    top:calc(118px + env(safe-area-inset-top));
-    width:min(420px, 92vw);
+    top:auto; bottom:calc(210px + env(safe-area-inset-bottom));
+    width:min(340px, 88vw);
     padding:13px 16px 15px;
   }
   #welcome-banner .wb-badge{ font-size:7px; padding:4px 7px 3px; }
-  #welcome-banner p{ font-size:18px; }
-  #welcome-banner .wb-sub{ font-size:15px; }
+  #welcome-banner p{ font-size:17px; }
+  #welcome-banner .wb-sub{ font-size:14px; }
+}
+/* tablets (touch, 761–1024px): same idea — drop it into the lower-middle
+   band so it clears the right-side shortcut column. */
+@media (min-width:761px) and (max-width:1024px){
+  body.touch #welcome-banner{
+    top:auto; bottom:calc(150px + env(safe-area-inset-bottom));
+    width:min(520px, 72vw);
+  }
+}
+/* shorter phones (≤700px tall): the middle band is smaller, so make the
+   popup very compact and sit it just above the joystick, with its top edge
+   below the shortcut column so nothing overlaps. */
+@media (max-width:760px) and (max-height:700px){
+  #welcome-banner{
+    bottom:calc(132px + env(safe-area-inset-bottom));
+    width:min(290px, 80vw);
+    padding:8px 12px 10px;
+  }
+  #welcome-banner p{ font-size:14px; line-height:1.28; }
+  #welcome-banner .wb-sub{ font-size:12px; margin-top:3px; }
+  #welcome-banner .wb-badge{ margin-bottom:5px; font-size:6px; padding:3px 6px 2px; }
+  /* Not enough vertical room here for both the shortcut column and the
+     popup — tuck the column away for the few seconds the popup is visible.
+     It returns automatically the moment the welcome banner finishes. */
+  body.welcome-showing #shortcut-keys{
+    opacity:0; pointer-events:none; transition:opacity .3s ease;
+  }
 }
 @media (max-height:600px){
-  #welcome-banner{ top:calc(88px + env(safe-area-inset-top)); }
+  /* short landscape: keep it clear of the on-screen controls */
+  #welcome-banner{ top:auto; bottom:calc(150px + env(safe-area-inset-bottom)); width:min(360px, 70vw); padding:10px 14px 12px; }
+  #welcome-banner p{ font-size:15px; }
+  #welcome-banner .wb-sub{ font-size:13px; }
 }
 body.reduce-motion #welcome-banner{ animation:none; opacity:1; }
 body.reduce-motion #welcome-banner.hide{ animation:none; opacity:0; transition:opacity .3s ease; }

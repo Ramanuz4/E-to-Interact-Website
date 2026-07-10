@@ -206,11 +206,16 @@
     if (welcomeBannerShown || !welcomeBannerEl) return;
     welcomeBannerShown = true;
     welcomeBannerEl.classList.remove("hidden");
+    // Flag the brief window the banner is on screen. On very short screens
+    // CSS uses this to keep the right-side shortcut column out of the way so
+    // the popup stays fully readable; it reappears the moment the banner goes.
+    document.body.classList.add("welcome-showing");
     setTimeout(() => {
       welcomeBannerEl.classList.add("hide");
       setTimeout(() => {
         welcomeBannerEl.classList.add("hidden");
         welcomeBannerEl.classList.remove("hide");
+        document.body.classList.remove("welcome-showing");
       }, 600); // matches the welcomeout animation duration
     }, 4600); // total time the banner stays fully visible
   }
