@@ -18,6 +18,16 @@
 
   --shadow-op:.35;
   --time-mix:0;          /* 0 = day, 1 = night — synced by JS */
+  --nav-h:74px;          /* top navbar height — HUD elements clear it */
+  /* Two-panel layout: the world renders inside a bordered "lane" panel on the
+     left; section content shows in a panel on the right. Vaugn is centred
+     WITHIN the lane panel (the panel itself is the left column), so the
+     in-world lane centre is 50% of the panel, not of the screen. */
+  --lane-w:30%;          /* width of the left lane panel */
+  --lane-center:50%;     /* Vaugn sits centred inside the lane panel */
+  /* screen-x of the lane panel's centre (panel starts at 16px, width lane-w),
+     used to anchor the interact prompt / portal that are fixed to the screen */
+  --lane-cx:calc(16px + var(--lane-w) / 2);
 }
 
 *{ box-sizing:border-box; margin:0; padding:0; }
@@ -80,8 +90,53 @@ body[data-biome="space"] .star{
    WORLD
    ============================================================ */
 #viewport{
-  position:fixed; inset:0; overflow:hidden; z-index:2;
+  position:fixed;
+  top:calc(var(--nav-h) + 16px);
+  left:16px;
+  width:var(--lane-w, 30%);
+  bottom:64px;
+  overflow:hidden; z-index:2;
+  border:3px solid var(--ui-border);
+  background:var(--paper);
+  box-shadow:0 6px 0 rgba(0,0,0,.4);
 }
+
+/* ===== Right content panel (the section content column) ===== */
+#content-panel{
+  position:fixed;
+  top:calc(var(--nav-h) + 16px);
+  left:calc(16px + var(--lane-w) + 16px);
+  right:16px;
+  bottom:64px;
+  z-index:2;
+  border:3px solid var(--ui-border);
+  background:var(--ui-bg);
+  box-shadow:0 6px 0 rgba(0,0,0,.4);
+  overflow:hidden;
+}
+.cp-inner{
+  position:absolute; inset:0;
+  overflow:auto;
+  padding:34px 40px;
+  color:var(--paper);
+}
+.cp-biome{
+  font-family:var(--font-display); font-size:13px; letter-spacing:3px;
+  color:var(--accent); margin-bottom:14px;
+}
+.cp-title{
+  font-family:var(--font-display); font-size:clamp(18px,2.2vw,26px);
+  line-height:1.3; margin-bottom:20px; color:var(--paper);
+}
+.cp-body{ font-family:var(--font-body); font-size:22px; line-height:1.5; }
+.cp-body p{ margin:12px 0; }
+.cp-body .fine{ font-size:18px; color:rgba(245,239,220,.6); }
+/* the content panel reuses the same section templates as the modal, so the
+   games grid / posts / team cards all render here too */
+#content-panel .cards,
+#content-panel .games-grid{ display:grid; gap:14px; margin-top:14px; }
+#content-panel .games-grid{ grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); }
+#content-panel .cards.team{ grid-template-columns:repeat(auto-fill, minmax(150px,1fr)); }
 #world{
   position:absolute; left:0; top:0; width:100%;
   will-change:transform;
@@ -100,6 +155,27 @@ body[data-biome="space"] .star{
 .section{
   position:absolute; left:0; width:100%;
   display:flex; align-items:center; justify-content:center;
+}
+
+/* The lane-stage holds all the scenery around Vaugn's path. It fills the
+   section; on wide screens it (and Vaugn, via --lane-center) shift into the
+   left third so the right side is free for the section content panel. */
+.lane-stage{
+  position:absolute; inset:0;
+  pointer-events:none;
+}
+.lane-stage > *{ pointer-events:auto; }
+
+/* ============================================================
+   LANE / CONTENT SPLIT (wide screens only)
+   Lane + scenery shift into the left third; the section sign/content
+   panel sits on the right. Phones keep the centred single-column layout.
+   ============================================================ */
+@media (min-width:900px){
+  /* The world now lives inside the bordered lane panel with Vaugn centred in
+     it, so the scenery no longer needs shifting. Clip section overflow so
+     nothing spills outside the lane panel frame. */
+  .section, .transition{ overflow:hidden; }
 }
 /* ============================================================
    TRANSITION CROSSINGS — each one is unique
@@ -892,7 +968,7 @@ body:not([data-time="night"]) .bird{ opacity:1; transition:opacity 2s ease; }
    Swap in real sprite sheets via js/config.js ANIMATIONS
    ============================================================ */
 #mascot{
-  position:absolute; left:50%; top:0;
+  position:absolute; left:var(--lane-center); top:0;
   width:64px; height:96px;
   margin-left:-32px;
   z-index:5;
@@ -934,7 +1010,12 @@ body:not([data-time="night"]) .bird{ opacity:1; transition:opacity 2s ease; }
 @keyframes fbstep{ 0%,100%{ translate:-50% 0; } 50%{ translate:-50% -6px; } }
 
 .anim-label{
-  position:absolute; top:-26px; left:50%; transform:translateX(-50%);
+  /* The sprite is bottom-anchored and taller than the 96px mascot box, so its
+     top sits at (96px - sprite-h). Place the label a little above that top edge
+     so it never overlaps Vaugn's head. Falls back to a safe offset pre-load. */
+  position:absolute;
+  top:calc(96px - var(--sprite-h, 128px) - 40px);
+  left:50%; transform:translateX(-50%);
   font-size:16px; color:var(--paper);
   background:rgba(13,13,20,.8); padding:2px 8px 1px;
   border:2px solid rgba(245,239,220,.5);
@@ -977,11 +1058,15 @@ body:not([data-time="night"]) .bird{ opacity:1; transition:opacity 2s ease; }
 #particles{ position:fixed; inset:0; z-index:4; pointer-events:none; }
 
 #darkness{
-  position:fixed; inset:0; z-index:6; pointer-events:none;
+  position:fixed;
+  top:calc(var(--nav-h) + 16px); left:16px; width:var(--lane-w); bottom:64px;
+  z-index:6; pointer-events:none;
   background:#03020a; opacity:0; transition:opacity .35s ease;
 }
 #night-tint{
-  position:fixed; inset:0; z-index:5; pointer-events:none;
+  position:fixed;
+  top:calc(var(--nav-h) + 16px); left:16px; width:var(--lane-w); bottom:64px;
+  z-index:5; pointer-events:none;
   background:linear-gradient(#0a0820, #06041a);
   opacity:0;
   transition:opacity .4s ease;
@@ -1005,14 +1090,18 @@ body:not([data-time="night"]) .bird{ opacity:1; transition:opacity 2s ease; }
     radial-gradient(ellipse 100% 40% at 50% 0%, rgba(60,60,160,.14), transparent 60%);
 }
 #lantern{
-  position:fixed; inset:0; z-index:7; pointer-events:none;
+  position:fixed;
+  top:calc(var(--nav-h) + 16px); left:16px; width:var(--lane-w); bottom:64px;
+  z-index:7; pointer-events:none;
   opacity:0; transition:opacity .35s ease;
   background:radial-gradient(circle 240px at var(--lx,50%) var(--ly,60%),
     rgba(255,210,74,.32), rgba(255,180,60,.12) 45%, transparent 70%);
   mix-blend-mode:screen;
 }
 #vignette{
-  position:fixed; inset:0; z-index:6; pointer-events:none;
+  position:fixed;
+  top:calc(var(--nav-h) + 16px); left:16px; width:var(--lane-w); bottom:64px;
+  z-index:6; pointer-events:none;
   background:radial-gradient(ellipse at 50% 55%, transparent 55%, rgba(0,0,10,.28));
   transition:background 1.8s ease;
 }
@@ -1030,17 +1119,85 @@ body[data-time="night"] #vignette{
    ============================================================ */
 #hud{ position:fixed; inset:0; z-index:10; pointer-events:none; }
 
+/* ============================================================
+   TOP NAVBAR
+   Logo on the left, section buttons on the right — styled like the
+   rest of the pixel UI (dark panel, cream border, gold hover). On
+   small screens the links collapse into a hamburger drawer.
+   ============================================================ */
+#navbar{
+  position:absolute; top:0; left:0; right:0;
+  display:flex; align-items:center; justify-content:space-between;
+  gap:12px;
+  padding:10px calc(16px + env(safe-area-inset-right)) 10px calc(16px + env(safe-area-inset-left));
+  background:var(--ui-bg);
+  border-bottom:3px solid var(--ui-border);
+  z-index:12; pointer-events:auto;
+}
+#nav-logo{
+  display:flex; align-items:center; flex:0 0 auto;
+  height:52px; text-decoration:none;
+}
+#nav-logo img{
+  height:100%; width:auto; image-rendering:auto; display:block;
+}
+
+#nav-links{
+  display:flex; align-items:stretch; gap:10px;
+}
+.nav-btn{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  min-width:96px; padding:8px 14px;
+  background:var(--ui-bg); color:var(--paper);
+  border:3px solid var(--ui-border);
+  box-shadow:0 4px 0 rgba(0,0,0,.55);
+  font-family:var(--font-display); font-size:11px; letter-spacing:1px;
+  cursor:pointer; pointer-events:auto;
+  transition:background .12s ease, color .12s ease, transform .06s ease;
+}
+.nav-btn:hover{ background:var(--accent); color:var(--ink); }
+.nav-btn:active{ transform:translateY(2px); box-shadow:0 2px 0 rgba(0,0,0,.55); }
+.nav-btn .nav-label{ font-size:11px; }
+.nav-btn .nav-key{
+  font-size:8px; opacity:.7;
+  border:2px solid currentColor; border-radius:2px;
+  padding:1px 4px; line-height:1;
+}
+
+/* hamburger — hidden on desktop */
+#nav-toggle{
+  display:none;
+  width:48px; height:48px; padding:0;
+  background:var(--ui-bg); border:3px solid var(--ui-border);
+  cursor:pointer; pointer-events:auto;
+  align-items:center; justify-content:center;
+}
+.nav-bars{ display:flex; flex-direction:column; gap:5px; width:22px; }
+.nav-bars span{
+  display:block; height:3px; width:100%; background:var(--paper);
+  transition:transform .2s ease, opacity .2s ease;
+}
+/* animated X when open */
+#nav-toggle[aria-expanded="true"] .nav-bars span:nth-child(1){ transform:translateY(8px) rotate(45deg); }
+#nav-toggle[aria-expanded="true"] .nav-bars span:nth-child(2){ opacity:0; }
+#nav-toggle[aria-expanded="true"] .nav-bars span:nth-child(3){ transform:translateY(-8px) rotate(-45deg); }
+
+/* The navbar replaces the old on-screen navigation: the destination keycaps
+   (Home/Games/Team/Posts/Contact) and the MAP fast-travel button are no longer
+   needed on any screen. Menu (pause) and the movement controls stay. */
+#shortcut-keys{ display:none !important; }
+[data-action="map"]{ display:none !important; }
+
 #biome-tag{
-  position:absolute; top:calc(18px + env(safe-area-inset-top)); left:calc(18px + env(safe-area-inset-left));
+  position:absolute; top:calc(var(--nav-h) + 14px + env(safe-area-inset-top)); left:calc(18px + env(safe-area-inset-left));
   font-family:var(--font-display); font-size:12px; letter-spacing:1px;
   background:var(--ui-bg); border:3px solid var(--ui-border);
   padding:10px 14px;
 }
-#biome-tag .arrow{ color:var(--accent2); }
 
 /* ---- Reload website button (always visible, all devices) ---- */
 #reload-btn{
-  position:absolute; top:calc(64px + env(safe-area-inset-top)); left:calc(18px + env(safe-area-inset-left));
+  position:absolute; top:calc(var(--nav-h) + 62px + env(safe-area-inset-top)); left:calc(18px + env(safe-area-inset-left));
   width:40px; height:40px; padding:0;
   display:flex; align-items:center; justify-content:center;
   background:var(--ui-bg); border:3px solid var(--ui-border);
@@ -1067,7 +1224,7 @@ body[data-time="night"] #vignette{
 
 /* ---- Minecraft-style rotating clock ---- */
 #clock{
-  position:absolute; top:calc(16px + env(safe-area-inset-top)); right:calc(18px + env(safe-area-inset-right));
+  position:absolute; top:calc(var(--nav-h) + 14px + env(safe-area-inset-top)); right:calc(18px + env(safe-area-inset-right));
   width:76px; height:76px; padding:0;
   background:none; border:none; cursor:pointer; pointer-events:auto;
 }
@@ -1155,7 +1312,7 @@ body[data-time="night"] #vignette{
    PROMPT
    ============================================================ */
 #prompt{
-  position:fixed; left:50%; top:0; z-index:11; pointer-events:none;
+  position:fixed; left:var(--lane-cx); top:0; z-index:11; pointer-events:none;
   transform:translate(-50%, 0);
   background:var(--ui-bg); border:3px solid var(--accent2);
   padding:6px 12px; font-size:20px; white-space:nowrap;
@@ -1235,11 +1392,41 @@ body[data-time="night"] #vignette{
   from{ opacity:1; transform:translate(-50%, 0); }
   to{ opacity:0; transform:translate(-50%, -14px); }
 }
+/* ============================================================
+   NAVBAR — small screens: collapse links into a hamburger drawer
+   (inspired by a slide-down full-width menu panel)
+   ============================================================ */
+@media (max-width:900px){
+  /* phones & small tablets keep Vaugn's lane centred (single-column layout) */
+  :root{ --lane-center:50%; }
+  #nav-toggle{ display:flex; }
+  #nav-links{
+    position:absolute; top:100%; left:0; right:0;
+    flex-direction:column; align-items:stretch; gap:0;
+    background:var(--ui-bg);
+    border-bottom:3px solid var(--ui-border);
+    max-height:0; overflow:hidden;
+    transition:max-height .28s ease;
+    pointer-events:auto;
+  }
+  #navbar.nav-open #nav-links{ max-height:70vh; overflow:auto; }
+  #nav-links .nav-btn{
+    width:100%; min-width:0;
+    flex-direction:row; justify-content:space-between;
+    border:none; border-top:2px solid rgba(245,239,220,.18);
+    box-shadow:none; border-radius:0;
+    padding:16px 22px; font-size:13px;
+  }
+  #nav-links .nav-btn:first-child{ border-top:none; }
+  #nav-links .nav-btn .nav-label{ font-size:13px; }
+  #nav-links .nav-btn .nav-key{ font-size:9px; }
+  #nav-links .nav-btn:active{ transform:none; }
+  #nav-logo{ height:44px; }
+}
+
 @media (max-width:760px){
-  /* Sit the welcome popup in the open band between the Contact shortcut
-     button (which ends near the top-right) and the joystick (bottom-left),
-     instead of up top where it overlapped the shortcut column. Centered in
-     that lower-middle gap and narrowed so it never slips under the buttons. */
+  /* Sit the welcome popup in the open band between the shortcut area and the
+     joystick, instead of up top. Centred in that lower-middle gap. */
   #welcome-banner{
     top:auto; bottom:calc(210px + env(safe-area-inset-bottom));
     width:min(340px, 88vw);

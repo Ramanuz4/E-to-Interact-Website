@@ -23,6 +23,32 @@
   let introSkip = null;
   const keys = new Set();
   let camY = 0;
+
+  // Vaugn's lane sits at the --lane-center CSS variable (left third on wide
+  // screens, centre on phones). Read it as a 0..1 fraction so JS overlays
+  // (portal, lantern glow) line up with him regardless of the breakpoint.
+  function laneCenterFraction() {
+    const raw = getComputedStyle(document.documentElement)
+      .getPropertyValue("--lane-center").trim();
+    if (raw.endsWith("%")) return parseFloat(raw) / 100;
+    if (raw.endsWith("px")) return parseFloat(raw) / window.innerWidth;
+    const v = parseFloat(raw);
+    return isNaN(v) ? 0.5 : v;
+  }
+  // Screen-y of the lane panel's top edge — the world renders inside that
+  // panel, so screen-fixed overlays (the interact prompt) offset by it.
+  function lanePanelTop() {
+    const vp = document.getElementById("viewport");
+    return vp ? vp.getBoundingClientRect().top : 0;
+  }
+
+  // Map a biome to the content-panel entry to show. Spawn isn't a real section
+  // in C.sections, so it gets a synthetic entry pointing at the spawn template.
+  const SPAWN_SECTION = { id: "spawn", biome: "spawn", title: "Spawn", sub: "Welcome", content: "content-spawn" };
+  function sectionForBiome(biome) {
+    if (biome === "spawn") return SPAWN_SECTION;
+    return C.sections.find(s => s.biome === biome) || null;
+  }
   let visitedBiomes = new Set(["spawn"]);
   let secretBuffer = [];
   let secretDone = false;
@@ -32,6 +58,14 @@
   // threshold (analog drift, a light tap) can't flicker the mascot
   // between idle and walking every frame.
   let movingLatched = false;
+  // Scroll-driven movement: wheel/trackpad scrolling feeds this accumulator,
+  // which the main loop drains into Vaugn's vertical position — the same
+  // pos.y that W/S drives — so scrolling and walking stay perfectly in sync.
+  // Vaugn appears pinned on screen while the world scrolls past him, because
+  // the camera already follows pos.y.
+  let scrollAccum = 0;
+  let scrollActive = false;   // true briefly after a scroll, so he "walks"
+  let _lastScrollStep = 0;    // this frame's scroll delta, for camera lockstep
 
   // one unique arrival line per zone (lands + crossings)
   const enterLines = {};
@@ -44,6 +78,11 @@
   applyCamera();
   ETI.world.updateBiome(centerY());
   ETI.world.updateSky(centerY(), 1);
+  // seed the right content panel with the land Vaugn spawns in
+  if (ETI.renderContentPanel) {
+    const startSec = sectionForBiome(ETI.world.biomeAt(centerY()).biome);
+    if (startSec) ETI.renderContentPanel(startSec);
+  }
 
   function vh() { return window.innerHeight; }
   function centerY() { return M.pos.y + 48; }
@@ -63,6 +102,7 @@
      ============================================================ */
 
   // ---- onboarding controller (multi-page, skippable, replayable) ----
+  const ONBOARD_KEY = "eti_onboarded_v1";
   const onboard = (function () {
     let pages = [];
     let idx = 0;
@@ -108,8 +148,12 @@
         returnToPause = false;
         mode = "play";
         ETI.ui.openPause();
-      } else if (cb) {
-        cb();
+      } else {
+        // Remember first-run onboarding was completed/skipped so it doesn't
+        // reappear on every visit. Replaying from the pause menu (returnToPause)
+        // deliberately doesn't touch this flag.
+        try { localStorage.setItem(ONBOARD_KEY, "1"); } catch (e) {}
+        if (cb) cb();
       }
     }
 
@@ -158,8 +202,15 @@
     if (mode !== "boot") return;
     bootEl.classList.add("out");
     setTimeout(() => bootEl.remove(), 1100);
-    mode = "onboard";
-    onboard.run(startIntro);
+
+    let seen = false;
+    try { seen = localStorage.getItem(ONBOARD_KEY) === "1"; } catch (e) {}
+    if (seen) {
+      startIntro();               // returning visitor — straight into the world
+    } else {
+      mode = "onboard";
+      onboard.run(startIntro);
+    }
   }
 
   function startIntro() {
@@ -182,7 +233,6 @@
         "Let's explore."
       ], () => {
         mode = "play";
-        showWelcomeBanner();
       });
     }
     // expose so a keypress during the walk-in can skip straight to dialogue
@@ -236,7 +286,7 @@
     const p = document.createElement("div");
     p.className = "portal";
     p.style.top = (y + 20) + "px";   // portal center sits on Vaugn's torso
-    p.style.left = `calc(50% + ${xOff}px)`;
+    p.style.left = `calc(var(--lane-center) + ${xOff}px)`;
     p.innerHTML =
       '<div class="bh-halo"></div>' +
       '<div class="bh-disk"></div>' +
@@ -381,7 +431,10 @@
     if (show) {
       if (_promptHidden) { promptEl.classList.remove("hidden"); _promptHidden = false; }
       promptLabel.textContent = nearest.label;
-      const screenY = M.pos.y - camY;
+      // world now renders inside the lane panel (offset down by the panel's top
+      // edge), so add that offset to place the screen-fixed prompt correctly.
+      const laneTop = lanePanelTop();
+      const screenY = M.pos.y - camY + laneTop;
       promptEl.style.transform = `translate(calc(-50% + ${Math.round(M.pos.x)}px), ${Math.round(screenY - 46)}px)`;
     } else if (!_promptHidden) {
       promptEl.classList.add("hidden");
@@ -411,7 +464,12 @@
       _darkPrev = dark;
     }
     if (dark > 0) {
-      const sx = window.innerWidth / 2 + M.pos.x;
+      // #lantern is now positioned over the lane panel, so its --lx/--ly are
+      // relative to that panel: x = Vaugn's centre in the panel, y = his
+      // on-panel screen y (pos.y - camY).
+      const vp = document.getElementById("viewport");
+      const w = vp ? vp.getBoundingClientRect().width : window.innerWidth;
+      const sx = w / 2 + M.pos.x;
       const sy = M.pos.y - camY + 40;
       lanternEl.style.setProperty("--lx", sx + "px");
       lanternEl.style.setProperty("--ly", sy + "px");
@@ -482,6 +540,24 @@
     const k = arrowToWASD[ev.key.toLowerCase()] || ev.key.toLowerCase();
     keys.delete(k === "shift" ? "shift" : k);
   });
+
+  /* ---- scroll-driven movement ----
+     Wheel / trackpad scrolling moves Vaugn up and down the world. We capture
+     the wheel delta into an accumulator that the main loop drains into pos.y
+     (exactly like walking), so scroll and W/S stay in sync and Vaugn stays
+     pinned on screen while the world scrolls past him. Only active in play. */
+  window.addEventListener("wheel", (ev) => {
+    if (mode !== "play") return;
+    if (ETI.ui.pauseOpen || ETI.ui.panelOpen || ETI.ui.devOpen || ETI.dialogue.isBlocking) return;
+    // normalise delta: line-mode wheels report small integers, pixel-mode
+    // large ones; scale both to comfortable world pixels per notch.
+    let d = ev.deltaY;
+    if (ev.deltaMode === 1) d *= 16;        // lines -> ~px
+    else if (ev.deltaMode === 2) d *= window.innerHeight; // pages
+    scrollAccum += d;
+    // prevent the page itself from scrolling; the world handles it
+    ev.preventDefault();
+  }, { passive: false });
 
   /* ============================================================
      TOUCH & ON-SCREEN CONTROLS
@@ -625,14 +701,46 @@
     li.addEventListener("click", () => { closeMap(); startTravel(li.dataset.travel); });
   });
 
-  // ---- shortcut keycaps: H G T P C, same destinations as the keyboard ----
-  document.querySelectorAll("#shortcut-keys [data-shortcut]").forEach(btn => {
+  // ---- shortcut buttons (navbar + legacy keycaps): same destinations ----
+  document.querySelectorAll("[data-shortcut]").forEach(btn => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
       if (mode === "boot" || ETI.ui.pauseOpen || ETI.ui.panelOpen || ETI.ui.devOpen || ETI.dialogue.isBlocking) return;
       closeMap();
+      closeNav();
       startTravel(btn.dataset.shortcut);
     });
+  });
+
+  // ---- hamburger nav drawer (small screens) ----
+  const navToggle = document.getElementById("nav-toggle");
+  const navLinks = document.getElementById("nav-links");
+  const navbar = document.getElementById("navbar");
+  function closeNav() {
+    if (!navToggle) return;
+    navToggle.setAttribute("aria-expanded", "false");
+    navToggle.setAttribute("aria-label", "Open menu");
+    if (navbar) navbar.classList.remove("nav-open");
+  }
+  function openNav() {
+    if (!navToggle) return;
+    navToggle.setAttribute("aria-expanded", "true");
+    navToggle.setAttribute("aria-label", "Close menu");
+    if (navbar) navbar.classList.add("nav-open");
+  }
+  if (navToggle) {
+    navToggle.addEventListener("click", (e) => {
+      e.preventDefault();
+      navToggle.getAttribute("aria-expanded") === "true" ? closeNav() : openNav();
+    });
+  }
+  // logo reloads to Home (spawn)
+  const navLogo = document.getElementById("nav-logo");
+  if (navLogo) navLogo.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (mode === "boot" || ETI.dialogue.isBlocking) return;
+    closeNav();
+    startTravel("spawn");
   });
 
   // ---- tap-to-advance dialogue, tap the prompt to interact ----
@@ -647,6 +755,8 @@
   function frame(now) {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
+
+    _lastScrollStep = 0;   // set by the movement block when scrolling this frame
 
     const uiBlocked = ETI.ui.pauseOpen || ETI.ui.panelOpen || ETI.ui.devOpen;
 
@@ -665,16 +775,38 @@
       const vy = my * speed;
       const vx = mx * speed * 0.7;
 
-      M.pos.y = Math.max(80, Math.min(ETI.world.totalHeight - 140, M.pos.y + vy * dt));
-      M.pos.x = Math.max(-260, Math.min(260, M.pos.x + vx * dt));
+      // ---- drain scroll into vertical movement ----
+      // A fraction of the accumulated wheel delta is applied each frame so
+      // scrolling feels smooth (eased) rather than teleporting. What's applied
+      // this frame counts toward vertical speed, so Vaugn animates as if he
+      // walked there. Positive deltaY = scroll down = move DOWN the world
+      // (toward spawn / larger pos.y), matching natural scroll direction.
+      let scrollStep = 0;
+      if (scrollAccum !== 0) {
+        scrollStep = scrollAccum * Math.min(1, dt * 12);
+        if (Math.abs(scrollStep) > Math.abs(scrollAccum)) scrollStep = scrollAccum;
+        scrollAccum -= scrollStep;
+        if (Math.abs(scrollAccum) < 0.5) scrollAccum = 0;
+      }
+      scrollActive = Math.abs(scrollStep) > 0.4;
+      _lastScrollStep = scrollStep;   // consumed by the camera lockstep below
+
+      M.pos.y = Math.max(80, Math.min(ETI.world.totalHeight - 140, M.pos.y + vy * dt + scrollStep));
+      // Keep Vaugn fully inside the lane panel: clamp his x-offset to the
+      // panel's half-width minus his sprite half-width and a small margin, so
+      // he can never walk under the panel border or off the edge.
+      const vpEl = document.getElementById("viewport");
+      const panelW = vpEl ? vpEl.getBoundingClientRect().width : 480;
+      const xLimit = Math.max(40, panelW / 2 - 54);
+      M.pos.x = Math.max(-xLimit, Math.min(xLimit, M.pos.x + vx * dt));
 
       // Hysteresis instead of one fixed threshold: a bigger push is
       // needed to start walking than to settle back to idle, so hovering
       // right at the edge (stick drift, a feather-light key tap) can't
       // make the state flicker back and forth.
       const speedMag = Math.max(Math.abs(vx), Math.abs(vy));
-      if (movingLatched) { if (speedMag < 4) movingLatched = false; }
-      else { if (speedMag > 10) movingLatched = true; }
+      if (movingLatched) { if (speedMag < 4 && !scrollActive) movingLatched = false; }
+      else { if (speedMag > 10 || scrollActive) movingLatched = true; }
       const moving = movingLatched;
       M.setSprinting(sprint && moving);
 
@@ -684,7 +816,10 @@
       } else {
         M.setState("idle");
       }
-      M.setMotion(vx, vy);
+      // include this frame's scroll as vertical velocity so the mascot's
+      // motion logic treats scrolling as walking (vertical only -> never
+      // triggers the left-facing art, which is gated on horizontal motion).
+      M.setMotion(vx, vy + scrollStep / Math.max(dt, 0.001));
 
     } else if (mode !== "boot" && mode !== "intro" && mode !== "portal") {
       M.setState("idle");
@@ -692,11 +827,19 @@
       M.setMotion(0, 0);
     }
 
-    /* --- camera (smooth follow) --- */
+    /* --- camera follow ---
+       While scrolling, snap the camera straight to its target so Vaugn stays
+       pinned on screen and the world scrolls past him (the point of scroll
+       movement). Otherwise ease, which gives walking its smooth follow and
+       re-centres him gently after a scroll ends. */
     const target = camTarget();
-    const stiffness = 4.5;
-    camY += (target - camY) * Math.min(1, dt * stiffness);
-    if (Math.abs(target - camY) < 0.3) camY = target;
+    if (_lastScrollStep !== 0) {
+      camY = target;                       // lockstep: no visible drift
+    } else {
+      const stiffness = 4.5;
+      camY += (target - camY) * Math.min(1, dt * stiffness);
+      if (Math.abs(target - camY) < 0.3) camY = target;
+    }
     applyCamera();
 
     /* --- biome + atmosphere --- */
@@ -711,6 +854,12 @@
       if (mode === "play" && !ETI.dialogue.isBlocking && enterLines[changed.biome]) {
         ETI.dialogue.toast(enterLines[changed.biome], 3400);
       }
+    }
+
+    // Keep the right content panel showing whatever land Vaugn is currently in.
+    if (changed && ETI.renderContentPanel) {
+      const sec = sectionForBiome(changed.biome);
+      if (sec) ETI.renderContentPanel(sec);
     }
 
     updatePrompt();

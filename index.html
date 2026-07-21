@@ -66,8 +66,48 @@
   <div id="vignette"></div>
 
   <!-- ============ HUD ============ -->
+  <!-- ===== Right-hand content panel (mirrors the section Vaugn is at) ===== -->
+  <div id="content-panel" aria-live="polite">
+    <div class="cp-inner">
+      <div class="cp-biome" id="cp-biome">SPAWN</div>
+      <h2 class="cp-title" id="cp-title">Welcome</h2>
+      <div class="cp-body" id="cp-body"></div>
+    </div>
+  </div>
+
   <div id="hud">
-    <div id="biome-tag"><span class="arrow">▸</span> <span id="biome-name">Spawn</span></div>
+
+    <!-- ===== Top navigation bar ===== -->
+    <nav id="navbar" aria-label="Site navigation">
+      <a id="nav-logo" href="#" aria-label="E to Interact — home">
+        <img src="assets/brand/logo.png" alt="E to Interact" />
+      </a>
+
+      <!-- hamburger toggle (small screens only) -->
+      <button id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+        <span class="nav-bars"><span></span><span></span><span></span></span>
+      </button>
+
+      <div id="nav-links">
+        <button class="nav-btn" data-shortcut="spawn">
+          <span class="nav-label">Home</span><span class="nav-key">H</span>
+        </button>
+        <button class="nav-btn" data-shortcut="castle">
+          <span class="nav-label">Games</span><span class="nav-key">G</span>
+        </button>
+        <button class="nav-btn" data-shortcut="studio">
+          <span class="nav-label">Team</span><span class="nav-key">T</span>
+        </button>
+        <button class="nav-btn" data-shortcut="space">
+          <span class="nav-label">Posts</span><span class="nav-key">P</span>
+        </button>
+        <button class="nav-btn" data-shortcut="temple">
+          <span class="nav-label">Contact</span><span class="nav-key">C</span>
+        </button>
+      </div>
+    </nav>
+
+    <div id="biome-tag"><span id="biome-name">Spawn</span></div>
 
     <button id="reload-btn" title="Reload website" aria-label="Reload website">
       <span class="reload-icon">↻</span>
@@ -353,6 +393,11 @@
 
   <!-- Hidden content templates, injected into the panel -->
   <template id="content-about">
+    <p>Welcome to <b>E to Interact</b> — an indie game studio dedicated to designing worlds, building games, and creating unforgettable interactive experiences.</p>
+    <p class="fine">Explore our world, discover our work, and enjoy your journey.</p>
+  </template>
+
+  <template id="content-spawn">
     <img class="about-logo" src="assets/brand/logo.png" alt="ET Interact" />
     <p><b>E to Interact</b> is a game studio that believes the web should feel like a place, not a page.</p>
     <p>We started around a campfire idea: what if visiting a company site felt like loading a save file? Everything we build — games, tools, worlds — starts from that same question.</p>

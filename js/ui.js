@@ -286,6 +286,27 @@
     panelOpen = true;
   };
 
+  /* ---------- Right content panel: always-visible section content ----------
+     Mirrors what the modal shows, but persistently in the right column. Updated
+     from main.js as Vaugn arrives at each land. Reuses the same <template>
+     content and the same renderers, so games/posts/team all appear here. */
+  let _cpSection = null;
+  ETI.renderContentPanel = function (section) {
+    if (!section || section === _cpSection) return;
+    _cpSection = section;
+    const biomeEl = document.getElementById("cp-biome");
+    const titleEl = document.getElementById("cp-title");
+    const body = document.getElementById("cp-body");
+    if (!body) return;
+    biomeEl.textContent = (section.title || "").toUpperCase();
+    titleEl.textContent = section.sub || section.title || "";
+    body.innerHTML = "";
+    const tpl = document.getElementById(section.content);
+    if (tpl) body.appendChild(tpl.content.cloneNode(true));
+    if (body.querySelector("#games-grid")) renderGames(body);
+    if (body.querySelector("#posts-tabs")) renderPostsSection(body);
+  };
+
   /* ---------- GAMES — grid of cards, each opening its own detail page ---------- */
   function renderGames(root) {
     const grid = root.querySelector("#games-grid");

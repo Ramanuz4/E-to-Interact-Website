@@ -27,6 +27,9 @@
   let currentSrc = null;
   let currentModeClass = null;
   let usingFallbackMotion = false;
+  // true when the shown art is already drawn facing a direction (e.g. the
+  // left-walk gif) and so must NOT be mirrored by the scaleX facing flip.
+  let currentDirectional = false;
 
   // Continuous motion cues, smoothly eased every frame instead of being
   // toggled by CSS class/keyframe swaps — this is what makes idle->walk,
@@ -37,15 +40,31 @@
   let bobAmp = 0; // current bob amplitude in px (eases toward target)
   let facing = 1; // -1..1, eases toward facingTarget (turning)
   let facingTarget = 1;
+  // True only while Vaugn is ACTIVELY moving left (horizontal velocity is
+  // leftward this frame). Distinct from `facingTarget`, which remembers the
+  // last direction he faced even after he stops or turns to move up/down.
+  // The left-walk gif keys off this, so it never shows during up/down-only
+  // movement or while idle.
+  let movingLeft = false;
 
   // world position (px). x is an offset from screen centre.
   const pos = { x: 0, y: 0 };
 
   /** Resolve which animation to show for the current state:
-      the state's own src; else the idle src (fallback); else the
-      CSS placeholder. */
+      a directional walk art when moving left; else the state's own src;
+      else the idle src (fallback); else the CSS placeholder. */
   function resolve() {
     const A = ETI.CONFIG.ANIMATIONS;
+
+    // Dedicated left-facing walk art. Shown only while Vaugn is moving
+    // (walking or running) AND actually travelling left this frame — never
+    // during up/down-only movement or while idle. It's directional, so it
+    // must NOT be flipped and skips the idle-borrow bob (it animates itself).
+    if ((state === "walking" || state === "running") &&
+        movingLeft && A.walkingLeft && A.walkingLeft.src) {
+      return { a: A.walkingLeft, fallback: false, mirror: false, directional: true };
+    }
+
     const own = A[state] || A.idle;
     if (own.src) return { a: own, fallback: false, mirror: false };
     const idle = A.idle;
@@ -62,6 +81,9 @@
     // borrowing idle art — tick() eases its amplitude toward this target
     // every frame rather than snapping it on/off.
     usingFallbackMotion = !!r.fallback;
+    // Directional art (the left-walk gif) is its own complete animation, so
+    // it isn't flipped and doesn't get the borrowed idle bob.
+    currentDirectional = !!r.directional;
 
     if (r.placeholder) {
       if (currentSrc !== null) {
@@ -93,6 +115,10 @@
         h = a.dispH || a.frameH;
       spriteEl.style.width = w + "px";
       spriteEl.style.height = h + "px";
+      // expose the sprite height so the state label can sit above the full
+      // sprite (which is taller than the 96px mascot box and bottom-anchored),
+      // instead of overlapping Vaugn's head.
+      el.style.setProperty("--sprite-h", h + "px");
       if (isGif) {
         // browser animates the GIF itself
         spriteEl.style.backgroundSize = "contain";
@@ -141,8 +167,24 @@
     setMotion(vx, vy) {
       // Small dead zone so vertical-only movement (the common case here)
       // doesn't cause the mascot to flicker its facing back and forth.
-      if (vx > 20) facingTarget = 1;
-      else if (vx < -20) facingTarget = -1;
+      const prevFacing = facingTarget;
+      const prevMovingLeft = movingLeft;
+
+      // Actual leftward motion this frame (drives the left-walk gif).
+      movingLeft = vx < -20;
+
+      // Facing only ever flips to left while ACTIVELY moving left; any other
+      // time (moving right, up/down only, or standing still) it returns to the
+      // default orientation. This keeps the idle art from staying mirrored
+      // after a left walk, and keeps up/down movement showing normal idle art.
+      facingTarget = movingLeft ? -1 : 1;
+
+      // The left-walk gif swaps in/out on movingLeft; the mirrored art swaps
+      // on facingTarget. Rebuild the sprite if either changed while moving.
+      if ((movingLeft !== prevMovingLeft || facingTarget !== prevFacing) &&
+          (state === "walking" || state === "running")) {
+        applyState();
+      }
     },
 
     tick(dt) {
@@ -159,8 +201,15 @@
       }
 
       // ---- turning: ease the facing flip instead of snapping it ----
-      facing += (facingTarget - facing) * Math.min(1, dt * 9);
-      if (Math.abs(facing - facingTarget) < 0.01) facing = facingTarget;
+      // While idle, snap instead of easing: the idle art is the same either
+      // way, so easing the mirror after a left walk would show a brief,
+      // pointless left-to-right flip. Snapping makes stopping seamless.
+      if (state === "idle") {
+        facing = facingTarget;
+      } else {
+        facing += (facingTarget - facing) * Math.min(1, dt * 9);
+        if (Math.abs(facing - facingTarget) < 0.01) facing = facingTarget;
+      }
 
       // ---- idle -> walk -> run (and back) motion cue, fully eased ----
       // Only applies while borrowing idle art for walking/running. The
@@ -187,8 +236,12 @@
 
       if (currentModeClass) {
         spriteEl.style.translate = `-50% ${bob}px`;
+        // Directional art (left-walk gif) is already drawn facing left, so
+        // never mirror it. Other art flips via scaleX to face where he moves.
         spriteEl.style.transform =
-          Math.abs(facing - 1) < 0.001 ? "" : `scaleX(${facing})`;
+          currentDirectional || Math.abs(facing - 1) < 0.001
+            ? ""
+            : `scaleX(${facing})`;
       }
 
       // place in world via a single composited transform (no layout).

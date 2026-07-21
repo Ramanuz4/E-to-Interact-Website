@@ -23,6 +23,23 @@
     return e;
   }
 
+  /** Move everything currently in `sec` (all the scenery decorate() added)
+      into a single `.lane-stage` wrapper. CSS shifts this wrapper left on wide
+      screens so Vaugn's lane and its surrounding scenery sit in the left third,
+      leaving the right side clear for the section-content sign/panel. The
+      ground strip stays full-width (it's the floor, not lane-specific). */
+  function wrapLaneStage(sec) {
+    const stage = document.createElement("div");
+    stage.className = "lane-stage";
+    const kids = Array.prototype.slice.call(sec.childNodes);
+    for (const k of kids) {
+      // leave the full-width ground strip on the section itself
+      if (k.classList && k.classList.contains("ground")) continue;
+      stage.appendChild(k);
+    }
+    sec.appendChild(stage);
+  }
+
   /** Simple pixel NPC — CSS shapes, idle bob, talk on E. */
   function makeNPC(npc) {
     const el = document.createElement("div");
@@ -284,6 +301,11 @@
     const placeSection = (s) => {
       place(s.biome, s.id, s.title, C.sectionHeight, "section", (sec, secY, h) => {
         decorate(sec, s.biome, h);
+        // Everything decorate() added is scenery around Vaugn's lane — group it
+        // into a "stage" so CSS can shift the whole lane left on wide screens
+        // without disturbing the section-content panel we add on the right.
+        wrapLaneStage(sec);
+
         const sign = document.createElement("div");
         sign.className = "sign";
         sign.style.top = h * 0.42 + "px";
