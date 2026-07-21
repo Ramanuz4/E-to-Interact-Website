@@ -45,8 +45,19 @@
     const el = document.createElement("div");
     el.className = "npc npc-" + (npc.kind || "folk");
     el.dataset.npc = npc.id;
+
     const body = document.createElement("div");
     body.className = "npc-body";
+    // richer anatomy so NPCs read as little characters, not boxes:
+    // head + face (eyes), a torso, two arms, two legs, and a role prop.
+    body.innerHTML =
+      '<div class="npc-head"><span class="npc-eye l"></span><span class="npc-eye r"></span></div>' +
+      '<div class="npc-torso"></div>' +
+      '<div class="npc-arm l"></div>' +
+      '<div class="npc-arm r"></div>' +
+      '<div class="npc-leg l"></div>' +
+      '<div class="npc-leg r"></div>' +
+      '<div class="npc-prop"></div>';
     el.appendChild(body);
     el.appendChild(d("npc-shadow", {}));
     return el;
@@ -313,12 +324,9 @@
           `<div class="plate">${s.icon} ${s.title}</div>` +
           `<div class="sub">${s.sub}</div>`;
         sec.appendChild(sign);
-        interactables.push({
-          y: secY + h * 0.42 + 60,
-          label: "Read — " + s.sub,
-          el: sign,
-          action: () => ETI.openPanel(s)
-        });
+        // The section content now lives permanently in the right-hand content
+        // panel, so the sign is decorative only — no E-press popup. (NPC
+        // "Talk" interactables are added separately and still work.)
       });
     };
 
@@ -368,6 +376,17 @@
 
     totalHeight = y;
     worldEl.style.height = totalHeight + "px";
+
+    // One continuous grass path running the full height of the world, down the
+    // lane centre, behind all decor and Vaugn. Because it's a single unbroken
+    // element, the walkable path is inherently seamless — the named transition
+    // pieces (bridge, trail, stairs, elevator, sky bridge) simply sit on top of
+    // it, so grass flows into and out of each with no hard seam.
+    const path = document.createElement("div");
+    path.className = "grass-path";
+    path.style.height = totalHeight + "px";
+    worldEl.insertBefore(path, worldEl.firstChild);
+
     placeNPCs();
   }
 

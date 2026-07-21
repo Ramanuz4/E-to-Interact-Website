@@ -324,108 +324,134 @@ body[data-biome="space"] .star{
 /* ---------- NPCs — sparse ambient storytellers ---------- */
 .npc{
   position:absolute; z-index:2;
-  width:48px; height:72px;
-  margin-left:-24px;
+  width:52px; height:82px;
+  margin-left:-26px;
   pointer-events:none;
 }
 .npc-body{ position:absolute; inset:0; }
 .npc-shadow{
   position:absolute; left:50%; bottom:-6px; transform:translateX(-50%);
-  width:40px; height:10px; background:rgba(0,0,0,.28); border-radius:50%;
+  width:42px; height:11px; background:rgba(0,0,0,.3); border-radius:50%;
 }
 /* NPCs stand still when idle (no constant bob). They give a brief nod only
    while actively talking, which is a purposeful interaction cue. */
 .npc.talking{ animation:npcbob .35s ease-in-out 2; }
 .npc.near .npc-body::after{
-  content:""; position:absolute; top:-8px; left:50%; transform:translateX(-50%);
-  width:8px; height:8px; background:var(--accent2); border-radius:50%;
-  box-shadow:0 0 10px rgba(110,231,168,.75);
+  content:""; position:absolute; top:-14px; left:50%; transform:translateX(-50%);
+  width:9px; height:9px; background:var(--accent2); border-radius:50%;
+  box-shadow:0 0 12px rgba(110,231,168,.85);
 }
 @keyframes npcbob{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-3px); } }
 
-/* NPC silhouettes by role */
-.npc-hiker .npc-body{
-  background:
-    linear-gradient(var(--paper) 0 0) 14px 8px / 20px 18px no-repeat,
-    linear-gradient(#6b4a2a 0 0) 10px 26px / 28px 22px no-repeat,
-    linear-gradient(var(--ink) 0 0) 16px 48px / 8px 18px no-repeat,
-    linear-gradient(var(--ink) 0 0) 26px 48px / 8px 18px no-repeat;
+/* ---------- character anatomy (shared by every NPC) ----------
+   A clear little person: round-ish head with a face, a defined torso with
+   two arms, and two legs. Role styling below recolours these and adds props.
+   --skin / --outfit / --hair are set per-role. */
+.npc{
+  --skin:#f0d9b8; --outfit:#6b6f7a; --hair:#3a2c1e; --boot:#241708;
 }
-.npc-hiker .npc-body::before{
-  content:""; position:absolute; top:0; left:18px; width:12px; height:12px;
-  background:var(--danger); clip-path:polygon(50% 0,100% 100%,0 100%);
+.npc-head{
+  position:absolute; top:2px; left:50%; transform:translateX(-50%);
+  width:24px; height:24px; border-radius:9px;
+  background:var(--skin); border:3px solid var(--ink);
+  z-index:3;
 }
-.npc-ranger .npc-body{
-  background:
-    linear-gradient(#e9e2cc 0 0) 14px 6px / 20px 16px no-repeat,
-    linear-gradient(#2d5c38 0 0) 8px 22px / 32px 26px no-repeat,
-    linear-gradient(var(--ink) 0 0) 14px 48px / 9px 16px no-repeat,
-    linear-gradient(var(--ink) 0 0) 26px 48px / 9px 16px no-repeat;
+/* hair cap on top of the head */
+.npc-head::before{
+  content:""; position:absolute; top:-5px; left:-3px; right:-3px; height:11px;
+  background:var(--hair); border:3px solid var(--ink); border-bottom:none;
+  border-radius:9px 9px 0 0;
 }
-.npc-ranger .npc-body::before{
-  content:""; position:absolute; top:18px; right:2px; width:14px; height:28px;
-  background:#5b3f22; border:2px solid #241708; transform:rotate(12deg);
+.npc-eye{
+  position:absolute; top:11px; width:4px; height:5px; background:var(--ink);
+  border-radius:1px; z-index:4;
 }
-.npc-guard .npc-body{
-  background:
-    linear-gradient(#e9e2cc 0 0) 14px 6px / 20px 16px no-repeat,
-    linear-gradient(#5f5b73 0 0) 8px 22px / 32px 28px no-repeat,
-    linear-gradient(var(--ink) 0 0) 14px 50px / 9px 14px no-repeat,
-    linear-gradient(var(--ink) 0 0) 26px 50px / 9px 14px no-repeat;
+.npc-eye.l{ left:5px; } .npc-eye.r{ right:5px; }
+.npc-torso{
+  position:absolute; top:24px; left:50%; transform:translateX(-50%);
+  width:30px; height:30px; border-radius:8px 8px 5px 5px;
+  background:var(--outfit); border:3px solid var(--ink);
+  z-index:2;
 }
-.npc-guard .npc-body::before{
-  content:""; position:absolute; top:20px; left:4px; width:8px; height:34px;
-  background:#8a8a95; border:3px solid #4a4a55;
+.npc-arm{
+  position:absolute; top:27px; width:8px; height:24px; border-radius:5px;
+  background:var(--outfit); border:3px solid var(--ink); z-index:1;
 }
-.npc-coder .npc-body{
-  background:
-    linear-gradient(#e9e2cc 0 0) 14px 6px / 20px 16px no-repeat,
-    linear-gradient(#4a90d9 0 0) 10px 22px / 28px 24px no-repeat,
-    linear-gradient(var(--ink) 0 0) 14px 46px / 9px 16px no-repeat,
-    linear-gradient(var(--ink) 0 0) 26px 46px / 9px 16px no-repeat;
+.npc-arm.l{ left:3px; } .npc-arm.r{ right:3px; }
+.npc-leg{
+  position:absolute; bottom:0; width:10px; height:20px; border-radius:3px 3px 4px 4px;
+  background:var(--boot); border:3px solid var(--ink); z-index:2;
 }
-.npc-coder .npc-body::after{
-  content:""; position:absolute; top:28px; left:30px; width:16px; height:12px;
-  background:#0f1522; border:2px solid #2b2b36;
-  box-shadow:inset 0 0 6px rgba(110,231,168,.6);
+.npc-leg.l{ left:12px; } .npc-leg.r{ right:12px; }
+/* the role prop layer sits in front */
+.npc-prop{ position:absolute; inset:0; z-index:5; pointer-events:none; }
+
+/* ---------- role palettes + props ---------- */
+
+/* Hiker (camper) — warm jacket, red cap */
+.npc-hiker{ --skin:#f0d9b8; --outfit:#b5533a; --hair:#3a2c1e; }
+.npc-hiker .npc-head::before{ background:var(--danger); }
+.npc-hiker .npc-prop::after{ /* backpack */
+  content:""; position:absolute; top:26px; right:1px; width:12px; height:20px;
+  background:#6b4a2a; border:3px solid var(--ink); border-radius:4px;
 }
-.npc-pilot .npc-body{
-  background:
-    linear-gradient(#e9e2cc 0 0) 14px 6px / 20px 16px no-repeat,
-    linear-gradient(#f5efdc 0 0) 8px 22px / 32px 28px no-repeat,
-    linear-gradient(var(--ink) 0 0) 14px 50px / 9px 14px no-repeat,
-    linear-gradient(var(--ink) 0 0) 26px 50px / 9px 14px no-repeat;
+
+/* Ranger (forager) — green coat, holding a staff */
+.npc-ranger{ --skin:#e9c9a0; --outfit:#2d6b3d; --hair:#241708; }
+.npc-ranger .npc-prop::before{ /* staff */
+  content:""; position:absolute; top:14px; right:0; width:5px; height:52px;
+  background:#5b3f22; border:2px solid var(--ink); border-radius:3px; transform:rotate(10deg);
 }
-.npc-pilot .npc-body::before{
-  content:""; position:absolute; top:4px; left:10px; width:28px; height:10px;
-  background:#8fd3f4; border:2px solid #2b2b36; border-radius:6px 6px 0 0;
+
+/* Guard (castle) — steel armour, holding a spear */
+.npc-guard{ --skin:#f0d9b8; --outfit:#7e8595; --hair:#2b2b36; }
+.npc-guard .npc-head::before{ background:#9aa0ad; } /* helmet */
+.npc-guard .npc-prop::before{ /* spear */
+  content:""; position:absolute; top:2px; left:2px; width:5px; height:66px;
+  background:#8a8a95; border:2px solid var(--ink);
 }
-.npc-mystic .npc-body{
-  background:
-    linear-gradient(#e9e2cc 0 0) 14px 6px / 20px 16px no-repeat,
-    linear-gradient(#6e5a94 0 0) 8px 22px / 32px 30px no-repeat,
-    linear-gradient(var(--ink) 0 0) 14px 52px / 9px 12px no-repeat,
-    linear-gradient(var(--ink) 0 0) 26px 52px / 9px 12px no-repeat;
+.npc-guard .npc-prop::after{ /* spear tip */
+  content:""; position:absolute; top:-2px; left:-1px; width:0; height:0;
+  border-left:7px solid transparent; border-right:7px solid transparent;
+  border-bottom:12px solid #c9ccd6;
 }
-.npc-mystic .npc-body::before{
-  content:""; position:absolute; top:-4px; left:16px; width:16px; height:16px;
-  border-radius:50%; background:radial-gradient(circle at 40% 35%,#fff,var(--accent) 70%);
-  box-shadow:0 0 12px rgba(255,210,74,.7);
+
+/* Coder (dev) — blue hoodie, glowing laptop */
+.npc-coder{ --skin:#e9c9a0; --outfit:#4a90d9; --hair:#241708; }
+.npc-coder .npc-prop::after{ /* laptop */
+  content:""; position:absolute; top:40px; left:50%; transform:translateX(-50%);
+  width:24px; height:14px; background:#0f1522; border:2px solid #2b2b36; border-radius:2px;
+  box-shadow:inset 0 0 8px rgba(110,231,168,.8), 0 0 10px rgba(110,231,168,.35);
 }
-.npc-angler .npc-body{
-  background:
-    linear-gradient(#e9e2cc 0 0) 14px 8px / 20px 16px no-repeat,
-    linear-gradient(#4a6a8a 0 0) 10px 24px / 28px 22px no-repeat,
-    linear-gradient(var(--ink) 0 0) 16px 46px / 8px 16px no-repeat,
-    linear-gradient(var(--ink) 0 0) 26px 46px / 8px 16px no-repeat;
+
+/* Pilot (space) — white suit, visor helmet */
+.npc-pilot{ --skin:#f0d9b8; --outfit:#eef1f5; --hair:#2b2b36; }
+.npc-pilot .npc-head{ background:#eef1f5; }
+.npc-pilot .npc-head::after{ /* visor */
+  content:""; position:absolute; top:8px; left:3px; right:3px; height:9px;
+  background:#8fd3f4; border:2px solid #2b6a8a; border-radius:4px;
 }
-.npc-angler .npc-body::before{
-  content:""; position:absolute; top:10px; right:-6px; width:4px; height:44px;
-  background:#5b4023; transform:rotate(-18deg);
+.npc-pilot .npc-eye{ display:none; }
+
+/* Mystic (temple keeper) — purple robe, floating orb */
+.npc-mystic{ --skin:#e9c9a0; --outfit:#6e5a94; --hair:#2b2b36; }
+.npc-mystic .npc-torso{ height:34px; border-radius:8px 8px 12px 12px; } /* long robe */
+.npc-mystic .npc-leg{ display:none; }
+.npc-mystic .npc-prop::before{ /* orb */
+  content:""; position:absolute; top:30px; right:-2px; width:14px; height:14px; border-radius:50%;
+  background:radial-gradient(circle at 40% 35%,#fff,var(--accent) 70%);
+  box-shadow:0 0 14px rgba(255,210,74,.8);
 }
-.npc-angler .npc-body::after{
-  content:""; position:absolute; top:6px; right:-18px; width:18px; height:10px;
-  border:2px solid rgba(200,220,240,.5); border-radius:50%;
+
+/* Angler (bridge) — blue coat, fishing rod + line */
+.npc-angler{ --skin:#e9c9a0; --outfit:#4a6a8a; --hair:#3a2c1e; }
+.npc-angler .npc-prop::before{ /* rod */
+  content:""; position:absolute; top:6px; right:-6px; width:4px; height:52px;
+  background:#5b4023; border:2px solid var(--ink); transform:rotate(-20deg);
+}
+.npc-angler .npc-prop::after{ /* line float */
+  content:""; position:absolute; top:2px; right:-20px; width:16px; height:9px;
+  border:2px solid rgba(200,220,240,.6); border-radius:50%;
 }
 
 /* ---------- ambient decor (sparse life) ---------- */
@@ -555,6 +581,30 @@ body[data-biome="space"] .star{
 
 /* ground strips */
 .ground{ height:60px; z-index:0; }
+
+/* Continuous vertical grass path — the walkable lane Vaugn travels. A single
+   full-height element down the lane centre, behind decor and Vaugn, so the
+   path is inherently seamless; named pieces (bridge/trail/stairs/etc.) sit on
+   top of it. A soft dirt tread runs down the middle with grassy verges. */
+.grass-path{
+  position:absolute; top:0; left:50%; transform:translateX(-50%);
+  width:190px; z-index:0; pointer-events:none;
+  background:
+    linear-gradient(90deg,
+      transparent 0 30%,
+      #7a5a34 34%, #8a6a40 50%, #7a5a34 66%,
+      transparent 70% 100%),
+    linear-gradient(90deg, #3f8a4d 0 34%, #367a44 34% 66%, #3f8a4d 66% 100%);
+  box-shadow:inset 0 0 0 3px rgba(0,0,0,.06);
+}
+.grass-path::before{
+  content:""; position:absolute; left:50%; transform:translateX(-50%);
+  top:0; bottom:0; width:66px;
+  background:repeating-linear-gradient(0deg,
+    rgba(0,0,0,.05) 0 22px, rgba(255,255,255,.045) 22px 44px);
+}
+body[data-time="night"] .grass-path{ filter:brightness(.5) saturate(.8); }
+
 .ground.g-grass{ background:linear-gradient(#3f8a4d,#2c6b3a); box-shadow:inset 0 6px 0 rgba(255,255,255,.12); }
 .ground.g-forest{ background:linear-gradient(#2f6b3d,#1d4a2a); box-shadow:inset 0 6px 0 rgba(160,220,170,.14); }
 .ground.g-stone{ height:52px; background:repeating-linear-gradient(90deg,#6b6577 0 40px,#5b5668 40px 80px); border-top:5px solid #3a3646; }
@@ -808,53 +858,38 @@ body[data-time="night"] .bird{ opacity:0; transition:opacity 2s ease; }
 body:not([data-time="night"]) .bird{ opacity:1; transition:opacity 2s ease; }
 
 /* New NPC types */
-.npc-scout .npc-body{
-  background:
-    linear-gradient(#e9e2cc 0 0) 14px 6px / 20px 16px no-repeat,
-    linear-gradient(#8a5c3a 0 0) 8px 22px / 32px 26px no-repeat,
-    linear-gradient(var(--ink) 0 0) 14px 48px / 9px 16px no-repeat,
-    linear-gradient(var(--ink) 0 0) 26px 48px / 9px 16px no-repeat;
+/* Scout (forest) — brown coat, wide hat, holding a small plant */
+.npc-scout{ --skin:#e9c9a0; --outfit:#8a5c3a; --hair:#241708; }
+.npc-scout .npc-head::before{ /* wide-brim hat */
+  left:-6px; right:-6px; top:-4px; height:9px; border-radius:8px;
+  background:#5b3f22;
 }
-.npc-scout .npc-body::before{
-  content:""; position:absolute; top:-4px; left:14px; width:20px; height:10px;
-  background:#5b3f22; border:2px solid #241708; border-radius:4px 4px 0 0;
-}
-.npc-scout .npc-body::after{
-  content:""; position:absolute; top:24px; left:-2px; width:6px; height:22px;
-  background:#7a9a5a; border:2px solid #3a5a2a; transform:rotate(-10deg);
+.npc-scout .npc-prop::after{ /* little sapling in hand */
+  content:""; position:absolute; top:34px; left:-2px; width:8px; height:16px;
+  background:#7a9a5a; border:2px solid #3a5a2a; border-radius:50% 50% 2px 2px; transform:rotate(-10deg);
 }
 
-.npc-scholar .npc-body{
-  background:
-    linear-gradient(#e9e2cc 0 0) 14px 6px / 20px 18px no-repeat,
-    linear-gradient(#3a3a6a 0 0) 8px 24px / 32px 26px no-repeat,
-    linear-gradient(var(--ink) 0 0) 14px 50px / 9px 14px no-repeat,
-    linear-gradient(var(--ink) 0 0) 26px 50px / 9px 14px no-repeat;
+/* Scholar / Designer (studio) — navy robe, mortarboard, holding a book */
+.npc-scholar{ --skin:#f0d9b8; --outfit:#3a3a6a; --hair:#2b2b36; }
+.npc-scholar .npc-head::before{ /* mortarboard cap */
+  top:-6px; left:-7px; right:-7px; height:6px; border-radius:2px; background:#22224a;
 }
-.npc-scholar .npc-body::before{
-  content:""; position:absolute; top:26px; right:-2px; width:14px; height:18px;
-  background:#f5efdc; border:2px solid #3c2c1c;
-}
-.npc-scholar .npc-body::after{
-  content:""; position:absolute; top:2px; left:8px; width:32px; height:6px;
-  background:#3a3a6a; border-radius:6px 6px 0 0; border:2px solid #22224a;
+.npc-scholar .npc-prop::after{ /* book */
+  content:""; position:absolute; top:36px; right:0; width:14px; height:18px;
+  background:#f5efdc; border:2px solid #3c2c1c; border-left-width:4px;
 }
 
-.npc-merchant .npc-body{
-  background:
-    linear-gradient(#e9e2cc 0 0) 14px 6px / 20px 18px no-repeat,
-    linear-gradient(#8a7a3a 0 0) 8px 24px / 32px 26px no-repeat,
-    linear-gradient(var(--ink) 0 0) 14px 50px / 9px 14px no-repeat,
-    linear-gradient(var(--ink) 0 0) 26px 50px / 9px 14px no-repeat;
+/* Merchant (castle) — golden coat, holding a coin pouch */
+.npc-merchant{ --skin:#e9c9a0; --outfit:#b59a3a; --hair:#3a2c1e; }
+.npc-merchant .npc-head::before{ background:var(--accent); } /* gold cap */
+.npc-merchant .npc-prop::after{ /* coin pouch */
+  content:""; position:absolute; top:34px; left:-4px; width:16px; height:18px;
+  background:#6b4a2a; border:2px solid #241708; border-radius:4px 4px 8px 8px;
+  box-shadow:2px 3px 0 rgba(0,0,0,.3);
 }
-.npc-merchant .npc-body::before{
-  content:""; position:absolute; top:20px; left:-6px; width:16px; height:24px;
-  background:#6b4a2a; border:2px solid #241708; border-radius:3px;
-  box-shadow:2px 4px 0 rgba(0,0,0,.3);
-}
-.npc-merchant .npc-body::after{
-  content:""; position:absolute; top:4px; left:14px; width:12px; height:8px;
-  background:var(--accent); border:2px solid #a35b00; border-radius:50% 50% 0 0;
+.npc-merchant .npc-prop::before{ /* coin */
+  content:""; position:absolute; top:30px; left:0; width:8px; height:8px; border-radius:50%;
+  background:var(--accent); border:2px solid #a35b00; z-index:6;
 }
 
 /* Idle look-around — NPCs subtly shift their shadow to hint at a glance */
@@ -1055,7 +1090,11 @@ body:not([data-time="night"]) .bird{ opacity:1; transition:opacity 2s ease; }
 /* ============================================================
    ATMOSPHERE OVERLAYS
    ============================================================ */
-#particles{ position:fixed; inset:0; z-index:4; pointer-events:none; }
+#particles{
+  position:fixed;
+  top:calc(var(--nav-h) + 16px); left:16px; width:var(--lane-w); bottom:64px;
+  z-index:4; pointer-events:none;
+}
 
 #darkness{
   position:fixed;
@@ -1198,12 +1237,13 @@ body[data-time="night"] #vignette{
 /* ---- Reload website button (always visible, all devices) ---- */
 #reload-btn{
   position:absolute; top:calc(var(--nav-h) + 62px + env(safe-area-inset-top)); left:calc(18px + env(safe-area-inset-left));
-  width:40px; height:40px; padding:0;
-  display:flex; align-items:center; justify-content:center;
+  height:40px; padding:0 12px;
+  display:flex; align-items:center; justify-content:center; gap:7px;
   background:var(--ui-bg); border:3px solid var(--ui-border);
   color:var(--paper); cursor:pointer; pointer-events:auto;
 }
 #reload-btn .reload-icon{ font-size:19px; line-height:1; }
+#reload-btn .reload-text{ font-family:var(--font-display); font-size:11px; line-height:1; letter-spacing:1px; }
 #reload-btn:hover{ border-color:var(--accent); }
 #reload-btn:focus-visible{ border-color:var(--accent2); }
 #reload-btn:active{ transform:translateY(2px); }
@@ -1396,6 +1436,64 @@ body[data-time="night"] #vignette{
    NAVBAR — small screens: collapse links into a hamburger drawer
    (inspired by a slide-down full-width menu panel)
    ============================================================ */
+/* ============================================================
+   SMALL-SCREEN GATE
+   The world is desktop/laptop/tablet-landscape only. Below the width
+   threshold we hide the experience and show a full-screen notice.
+   ============================================================ */
+#screen-gate{ display:none; }
+
+@media (max-width:1023px){
+  /* hide the whole experience... */
+  body > *:not(#screen-gate){ display:none !important; }
+  /* ...and show the notice full-screen */
+  #screen-gate{
+    display:flex; position:fixed; inset:0; z-index:9999;
+    align-items:center; justify-content:center;
+    padding:28px;
+    background:
+      radial-gradient(circle at 50% 30%, rgba(255,210,74,.10), transparent 60%),
+      linear-gradient(#0a0a12, #05050c);
+    color:var(--paper); text-align:center;
+  }
+  #screen-gate .gate-box{
+    max-width:440px;
+    border:3px solid var(--ui-border);
+    background:var(--ui-bg);
+    box-shadow:0 10px 0 rgba(0,0,0,.5), 0 0 40px rgba(255,210,74,.12);
+    padding:30px 26px 34px;
+  }
+  #screen-gate .gate-logo img{ height:66px; width:auto; image-rendering:auto; margin-bottom:18px; }
+  #screen-gate .gate-title{
+    font-family:var(--font-display); font-size:15px; line-height:1.5;
+    color:var(--accent); margin-bottom:16px; letter-spacing:1px;
+  }
+  #screen-gate .gate-msg{
+    font-family:var(--font-body); font-size:20px; line-height:1.4;
+    margin-bottom:14px;
+  }
+  #screen-gate .gate-sub{
+    font-family:var(--font-body); font-size:18px; line-height:1.4;
+    color:rgba(245,239,220,.75);
+  }
+  #screen-gate .gate-sub b{ color:var(--paper); }
+}
+/* very short landscape phones still count as "small" even if wide enough,
+   so also gate when there isn't enough height to render the panels */
+@media (max-height:420px){
+  body > *:not(#screen-gate){ display:none !important; }
+  #screen-gate{
+    display:flex; position:fixed; inset:0; z-index:9999;
+    align-items:center; justify-content:center; padding:20px;
+    background:linear-gradient(#0a0a12, #05050c); color:var(--paper); text-align:center;
+  }
+  #screen-gate .gate-box{ max-width:440px; border:3px solid var(--ui-border); background:var(--ui-bg); padding:20px; }
+  #screen-gate .gate-logo img{ height:44px; width:auto; margin-bottom:10px; }
+  #screen-gate .gate-title{ font-family:var(--font-display); font-size:12px; color:var(--accent); margin-bottom:10px; }
+  #screen-gate .gate-msg{ font-family:var(--font-body); font-size:17px; margin-bottom:8px; }
+  #screen-gate .gate-sub{ font-family:var(--font-body); font-size:15px; color:rgba(245,239,220,.75); }
+}
+
 @media (max-width:900px){
   /* phones & small tablets keep Vaugn's lane centred (single-column layout) */
   :root{ --lane-center:50%; }
@@ -2049,8 +2147,9 @@ body.reduce-motion *::after{
 @media (max-width:760px){
   body{ font-size:20px; }
   #biome-tag{ font-size:9px; padding:8px 10px; top:calc(12px + env(safe-area-inset-top)); left:calc(12px + env(safe-area-inset-left)); }
-  #reload-btn{ top:calc(52px + env(safe-area-inset-top)); left:calc(12px + env(safe-area-inset-left)); width:34px; height:34px; }
+  #reload-btn{ top:calc(52px + env(safe-area-inset-top)); left:calc(12px + env(safe-area-inset-left)); height:34px; padding:0 10px; }
   #reload-btn .reload-icon{ font-size:16px; }
+  #reload-btn .reload-text{ font-size:10px; }
   #clock{ width:58px; height:58px; top:calc(12px + env(safe-area-inset-top)); right:calc(12px + env(safe-area-inset-right)); }
   .dial .half{ font-size:22px; }
   .time-badge{ font-size:6px; bottom:-20px; padding:3px 6px 2px; }

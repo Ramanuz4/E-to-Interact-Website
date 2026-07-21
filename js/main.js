@@ -35,12 +35,24 @@
     const v = parseFloat(raw);
     return isNaN(v) ? 0.5 : v;
   }
-  // Screen-y of the lane panel's top edge — the world renders inside that
-  // panel, so screen-fixed overlays (the interact prompt) offset by it.
-  function lanePanelTop() {
+  // ---- cached lane-panel metrics ----
+  // The world renders inside the lane panel. Several per-frame helpers need the
+  // panel's top/height/width; calling getBoundingClientRect() every frame forces
+  // a synchronous layout reflow (a real source of jank). Instead we measure it
+  // once and refresh only on resize, reading the cache in the hot loop.
+  const laneMetrics = { top: 0, height: window.innerHeight, width: 480 };
+  function refreshLaneMetrics() {
     const vp = document.getElementById("viewport");
-    return vp ? vp.getBoundingClientRect().top : 0;
+    if (!vp) return;
+    const r = vp.getBoundingClientRect();
+    laneMetrics.top = r.top;
+    laneMetrics.height = r.height;
+    laneMetrics.width = r.width;
   }
+  refreshLaneMetrics();
+
+  // Screen-y of the lane panel's top edge (cached).
+  function lanePanelTop() { return laneMetrics.top; }
 
   // Map a biome to the content-panel entry to show. Spawn isn't a real section
   // in C.sections, so it gets a synthetic entry pointing at the spawn template.
@@ -84,7 +96,13 @@
     if (startSec) ETI.renderContentPanel(startSec);
   }
 
-  function vh() { return window.innerHeight; }
+  // The world renders inside the lane panel, which is shorter than the window
+  // (it clears the navbar and the bottom hint bar). Camera centring and its
+  // clamps must use the PANEL height, not the window height, or Vaugn drifts
+  // out of the panel near the world's top/bottom edges.
+  function vh() {
+    return laneMetrics.height || window.innerHeight;
+  }
   function centerY() { return M.pos.y + 48; }
   function camTarget() {
     return Math.max(0, Math.min(ETI.world.totalHeight - vh(), centerY() - vh() * 0.55));
@@ -203,14 +221,10 @@
     bootEl.classList.add("out");
     setTimeout(() => bootEl.remove(), 1100);
 
-    let seen = false;
-    try { seen = localStorage.getItem(ONBOARD_KEY) === "1"; } catch (e) {}
-    if (seen) {
-      startIntro();               // returning visitor — straight into the world
-    } else {
-      mode = "onboard";
-      onboard.run(startIntro);
-    }
+    // Play the tutorial (onboarding) at the start of every visit, then flow
+    // into the intro and the world — exactly as it did originally.
+    mode = "onboard";
+    onboard.run(startIntro);
   }
 
   function startIntro() {
@@ -464,12 +478,9 @@
       _darkPrev = dark;
     }
     if (dark > 0) {
-      // #lantern is now positioned over the lane panel, so its --lx/--ly are
-      // relative to that panel: x = Vaugn's centre in the panel, y = his
-      // on-panel screen y (pos.y - camY).
-      const vp = document.getElementById("viewport");
-      const w = vp ? vp.getBoundingClientRect().width : window.innerWidth;
-      const sx = w / 2 + M.pos.x;
+      // #lantern is positioned over the lane panel, so its --lx/--ly are
+      // relative to that panel (cached width avoids per-frame reflow).
+      const sx = laneMetrics.width / 2 + M.pos.x;
       const sy = M.pos.y - camY + 40;
       lanternEl.style.setProperty("--lx", sx + "px");
       lanternEl.style.setProperty("--ly", sy + "px");
@@ -582,6 +593,7 @@
   evalTouch();
   let _tzTimer;
   window.addEventListener("resize", () => {
+    refreshLaneMetrics();
     clearTimeout(_tzTimer);
     _tzTimer = setTimeout(evalTouch, 200);
   });
@@ -791,22 +803,38 @@
       scrollActive = Math.abs(scrollStep) > 0.4;
       _lastScrollStep = scrollStep;   // consumed by the camera lockstep below
 
+      // Remember where he was so we can tell whether he ACTUALLY moved this
+      // frame — at the top/bottom of the world (and left/right of the panel)
+      // the clamps below stop him, and a blocked walk should read as idle.
+      const prevX = M.pos.x, prevY = M.pos.y;
+
       M.pos.y = Math.max(80, Math.min(ETI.world.totalHeight - 140, M.pos.y + vy * dt + scrollStep));
       // Keep Vaugn fully inside the lane panel: clamp his x-offset to the
       // panel's half-width minus his sprite half-width and a small margin, so
-      // he can never walk under the panel border or off the edge.
-      const vpEl = document.getElementById("viewport");
-      const panelW = vpEl ? vpEl.getBoundingClientRect().width : 480;
+      // he can never walk under the panel border or off the edge. (cached width)
+      const panelW = laneMetrics.width;
       const xLimit = Math.max(40, panelW / 2 - 54);
       M.pos.x = Math.max(-xLimit, Math.min(xLimit, M.pos.x + vx * dt));
+
+      // Did he actually move? If input is held but the clamp pinned him at a
+      // limit, he didn't — so he should stand idle, not walk in place.
+      const actuallyMoved =
+        Math.abs(M.pos.x - prevX) > 0.01 || Math.abs(M.pos.y - prevY) > 0.01;
+
+      // If he's pinned at a vertical limit, drop any leftover scroll so it
+      // doesn't pile up and cause a lag before he moves the other way.
+      if (!actuallyMoved && scrollAccum !== 0 &&
+          (M.pos.y <= 80 || M.pos.y >= ETI.world.totalHeight - 140)) {
+        scrollAccum = 0;
+      }
 
       // Hysteresis instead of one fixed threshold: a bigger push is
       // needed to start walking than to settle back to idle, so hovering
       // right at the edge (stick drift, a feather-light key tap) can't
       // make the state flicker back and forth.
       const speedMag = Math.max(Math.abs(vx), Math.abs(vy));
-      if (movingLatched) { if (speedMag < 4 && !scrollActive) movingLatched = false; }
-      else { if (speedMag > 10 || scrollActive) movingLatched = true; }
+      if (movingLatched) { if ((speedMag < 4 && !scrollActive) || !actuallyMoved) movingLatched = false; }
+      else { if ((speedMag > 10 || scrollActive) && actuallyMoved) movingLatched = true; }
       const moving = movingLatched;
       M.setSprinting(sprint && moving);
 
@@ -816,6 +844,9 @@
       } else {
         M.setState("idle");
       }
+      // While movement is driven by scrolling, the label reads "sprinting" —
+      // but only when he's actually moving (not pinned at a world edge).
+      M.setScrolling(scrollActive && actuallyMoved);
       // include this frame's scroll as vertical velocity so the mascot's
       // motion logic treats scrolling as walking (vertical only -> never
       // triggers the left-facing art, which is gated on horizontal motion).
@@ -824,6 +855,7 @@
     } else if (mode !== "boot" && mode !== "intro" && mode !== "portal") {
       M.setState("idle");
       M.setSprinting(false);
+      M.setScrolling(false);
       M.setMotion(0, 0);
     }
 

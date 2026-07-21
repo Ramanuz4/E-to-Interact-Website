@@ -17,8 +17,14 @@
     // the per-frame clear+fill cost a lot on large desktop screens, which was
     // a real source of lag, with no visible quality loss.
     DPR = Math.min(1.5, window.devicePixelRatio || 1);
-    W = window.innerWidth;
-    H = window.innerHeight;
+    // The canvas is confined to the lane panel, so size it to the PANEL's box.
+    // Measure the panel (#viewport), not the canvas itself — the canvas carries
+    // an inline pixel width from a previous resize, so measuring it would read a
+    // stale value and never shrink on window resize.
+    const vp = document.getElementById("viewport");
+    const r = vp ? vp.getBoundingClientRect() : canvas.getBoundingClientRect();
+    W = Math.round(r.width) || window.innerWidth;
+    H = Math.round(r.height) || window.innerHeight;
     canvas.width = Math.round(W * DPR);
     canvas.height = Math.round(H * DPR);
     canvas.style.width = W + "px";
@@ -28,6 +34,8 @@
   let _rzT;
   window.addEventListener("resize", () => { clearTimeout(_rzT); _rzT = setTimeout(resize, 150); });
   resize();
+  // the panel may not be laid out at init; re-measure once it is
+  requestAnimationFrame(() => requestAnimationFrame(resize));
 
   function rand(a, b) { return a + Math.random() * (b - a); }
 

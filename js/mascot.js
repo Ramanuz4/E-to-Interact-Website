@@ -15,6 +15,7 @@
   let frameTimer = 0;
   let sheetPlaying = false; // only sprite strips need frame stepping
   let _sprinting = false;
+  let _scrolling = false;   // true while movement is coming from wheel scroll
   let _tx = null,
     _ty = null; // last-applied transform (skip redundant writes)
 
@@ -76,7 +77,11 @@
     const r = resolve();
     const a = r.a;
     spriteEl.dataset.anim = state;
-    labelEl.textContent = "[" + state + "]";
+    // Display label: the internal "running" state (Shift held, and scroll
+    // movement) reads as "sprinting" to the player.
+    let labelState = state;
+    if (state === "running" || _scrolling) labelState = "sprinting";
+    labelEl.textContent = "[" + labelState + "]";
     // The bob motion cue (walk/run) only applies when this state is
     // borrowing idle art — tick() eases its amplitude toward this target
     // every frame rather than snapping it on/off.
@@ -161,6 +166,17 @@
       el.classList.toggle("sprinting", on);
     },
 
+    /** main.js calls this each frame: true while movement is being driven by
+        wheel scrolling, so the state label reads "sprinting". */
+    setScrolling(on) {
+      on = !!on;
+      if (on === _scrolling) return;
+      _scrolling = on;
+      // refresh the label immediately so it flips walking<->sprinting
+      labelEl.textContent = "[" + ((state === "running" || _scrolling)
+        ? "sprinting" : state) + "]";
+    },
+
     /** Called every frame with the current horizontal/vertical velocity
         (px/s) so the mascot can ease its facing direction (turning) and
         motion cues continuously, instead of main.js flipping a class. */
@@ -201,11 +217,13 @@
       }
 
       // ---- turning: ease the facing flip instead of snapping it ----
-      // While idle, snap instead of easing: the idle art is the same either
-      // way, so easing the mirror after a left walk would show a brief,
-      // pointless left-to-right flip. Snapping makes stopping seamless.
+      // While idle, force the default (unmirrored) orientation: the idle art
+      // is symmetric, so it should never appear mirrored — not after a left
+      // walk, and not while pinned against the left edge with A still held
+      // (where input is leftward but he isn't actually moving).
       if (state === "idle") {
-        facing = facingTarget;
+        facingTarget = 1;
+        facing = 1;
       } else {
         facing += (facingTarget - facing) * Math.min(1, dt * 9);
         if (Math.abs(facing - facingTarget) < 0.01) facing = facingTarget;
@@ -236,12 +254,12 @@
 
       if (currentModeClass) {
         spriteEl.style.translate = `-50% ${bob}px`;
-        // Directional art (left-walk gif) is already drawn facing left, so
-        // never mirror it. Other art flips via scaleX to face where he moves.
-        spriteEl.style.transform =
-          currentDirectional || Math.abs(facing - 1) < 0.001
-            ? ""
-            : `scaleX(${facing})`;
+        // The dedicated left-walk GIF handles left-facing movement, and all
+        // other art (idle borrowed for walk/run/up/down) is symmetric — so we
+        // never apply a scaleX mirror. This removes the flip that used to show
+        // when walking up right after a left walk, or when pinned at the left
+        // edge with A held.
+        spriteEl.style.transform = "";
       }
 
       // place in world via a single composited transform (no layout).
