@@ -633,7 +633,10 @@ body:not([data-time="night"]) #sky-moon::after{ animation:none; }
 .firefly.ff2{ animation-delay:-2.3s; animation-duration:9s; }
 .firefly.ff3{ animation-delay:-4.8s; animation-duration:8s; }
 .firefly.ff4{ animation-delay:-1.1s; animation-duration:6s; }
-body:not([data-time="night"]) .firefly{ opacity:0 !important; animation:none; }
+body:not([data-time="night"]) .firefly{ opacity:0 !important; }
+/* With the float animation removed, fireflies rest as steady glowing dots at
+   night so the forest still reads as alive after dark. */
+body[data-time="night"] .firefly{ opacity:.85; }
 @keyframes fireflyFloat{
   0%  { opacity:0; transform:translate(0,0); }
   20% { opacity:.9; }
@@ -1813,13 +1816,44 @@ body.touch .pause-hint, body.touch .pane-hint, body.touch .panel-hint{ display:n
 .back-btn:active{ transform:translateY(2px); box-shadow:0 1px 0 var(--ink); }
 
 /* ============================================================
-   REDUCED MOTION
+   NO AMBIENT MOTION (permanent)
+   Every animation in the world is switched off by default so nothing
+   idly moves, twinkles, flickers, bobs, drifts or pulses. Each element's
+   *resting* appearance is preserved below so every section keeps its look
+   and feel — a flame still looks like a flame, the portal still looks like
+   a portal, Vaugn still stands in the scene — they just hold still.
+
+   A handful of essential one-shot UI reveals (panels/menus/dialogue
+   appearing) are re-enabled explicitly afterwards so the interface still
+   feels responsive rather than snapping in abruptly.
+   ============================================================ */
+*,
+*::before,
+*::after{
+  animation:none !important;
+}
+
+/* A few elements only became visible *because* of a reveal animation (they
+   rest at opacity:0 or an offset transform). With all animations off, pin
+   their resting state to the fully-shown state so content still appears —
+   just instantly, with no motion. */
+#welcome-banner{ opacity:1 !important; transform:translate(-50%, 0) !important; transition:opacity .5s ease; }
+#welcome-banner.hide{ opacity:0 !important; }              /* JS still adds .hidden to remove it */
+.panel-card{ opacity:1 !important; transform:none !important; }
+#onboard{ opacity:1 !important; }
+.ob-card{ opacity:1 !important; transform:none !important; }
+.ob-page.on{ opacity:1 !important; transform:none !important; }
+#boot-logo,
+.boot-tagline{ opacity:1 !important; transform:none !important; }
+#secret-door{ transform:scale(1) !important; }
+
+/* ============================================================
+   REDUCED MOTION (kept for transitions)
    ============================================================ */
 body.reduce-motion *,
 body.reduce-motion *::before,
 body.reduce-motion *::after{
-  animation-duration:.001s !important;
-  transition-duration:.15s !important;
+  transition-duration:.12s !important;
 }
 
 /* ============================================================
