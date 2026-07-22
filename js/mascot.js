@@ -59,7 +59,10 @@
   // movement or while idle.
   let movingLeft = false;
   let leftGifActive = false;   // true while the left-walk gif is currently shown
-  let _leftReplayId = 0;       // cache-bust counter to restart the play-once gif
+  let leftGifShownAt = 0;      // timestamp the left gif was applied to the DOM
+  let leftHeld = false;        // true once we've swapped to the static last frame
+  let _leftReplayId = 0;       // cache-bust counter to restart the gif from frame 0
+  const LEFT_GIF_MS = 1200;    // one full loop of left.gif (12 x 100ms)
   const now = () => (performance && performance.now ? performance.now() : Date.now());
 
   // world position (px). x is an offset from screen centre.
@@ -71,12 +74,16 @@
   function resolve() {
     const A = ETI.CONFIG.ANIMATIONS;
 
-    // Dedicated left-facing walk art: a play-once (non-looping) gif that stops
-    // on its final frame on its own, so there's no loop glitch and it naturally
-    // "holds" the last pose while Vaugn keeps moving left. Shown only while
-    // moving (walking/running) AND actually travelling left this frame.
+    // Dedicated left-facing walk art. The gif is restarted from frame 0 on each
+    // fresh left-walk (cache-bust) and, after exactly one loop, we swap to a
+    // static image of its final frame so it never visibly loops a second time
+    // while Vaugn keeps moving left.
     if ((state === "walking" || state === "running") &&
         movingLeft && A.walkingLeft && A.walkingLeft.src) {
+      // once one loop has elapsed since the gif was shown, hold the last frame
+      if (leftHeld && A.walkingLeftHold && A.walkingLeftHold.src) {
+        return { a: A.walkingLeftHold, fallback: false, mirror: false, directional: true, leftHold: true };
+      }
       return { a: A.walkingLeft, fallback: false, mirror: false, directional: true, replay: true };
     }
 
@@ -124,14 +131,19 @@
     // Only rebuild the image/size when the resolved asset actually changed —
     // re-setting the same GIF url restarts it from frame 0 (a visible glitch),
     // so we avoid that for the looping idle art. The left-walk gif is the
-    // exception: it plays once and must restart each time a fresh left-walk
-    // begins, so `replay` forces a reload via a cache-busting query.
+    // exception: it must restart each time a fresh left-walk begins, so
+    // `replay` forces a reload via a cache-busting query and records the time
+    // it was shown (so we know when its single loop finishes).
     const wantReplay = r.replay && !leftGifActive;
     if (a.src !== currentSrc || modeClass !== currentModeClass || wantReplay) {
       spriteEl.classList.remove("sheet-mode", "gif-mode");
       spriteEl.classList.add(modeClass);
       let url = a.src;
-      if (r.replay) { url = a.src + "?r=" + (++_leftReplayId); leftGifActive = true; }
+      if (r.replay) {
+        url = a.src + "?r=" + (++_leftReplayId);
+        leftGifActive = true;
+        leftGifShownAt = now();   // start the one-loop countdown
+      }
       spriteEl.style.backgroundImage = `url(${url})`;
       const w = a.dispW || a.frameW,
         h = a.dispH || a.frameH;
@@ -159,9 +171,9 @@
       currentModeClass = modeClass;
     }
 
-    // Once the resolved art is no longer the left-walk gif, clear the flag so
-    // the next left-walk restarts the play-once animation from frame 0.
-    if (!r.replay) leftGifActive = false;
+    // Once the resolved art is no longer the left-walk (gif or held frame),
+    // clear the flags so the next left-walk restarts the animation cleanly.
+    if (!r.replay && !r.leftHold) { leftGifActive = false; leftHeld = false; }
 
     labelEl.style.display = "";
   }
@@ -225,6 +237,13 @@
     },
 
     tick(dt) {
+      // Left-walk: after the gif has played one full loop, swap to the static
+      // final-frame image so it holds that pose instead of looping again.
+      if (leftGifActive && !leftHeld && (now() - leftGifShownAt) >= LEFT_GIF_MS) {
+        leftHeld = true;
+        applyState();
+      }
+
       // sprite-strip frame advance (GIFs animate on their own)
       if (sheetPlaying && spriteEl._sheet) {
         const a = spriteEl._sheet;
