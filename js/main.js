@@ -51,7 +51,23 @@
   }
   refreshLaneMetrics();
 
-  // Screen-y of the lane panel's top edge (cached).
+  // Fire a dash in the direction Vaugn is currently moving. If no direction
+  // key is held, dash in the last direction he moved (defaults to "up" / into
+  // the world on first use). Ignored while on cooldown or already dashing.
+  function startDash() {
+    if (mode !== "play") return;
+    if (ETI.ui.pauseOpen || ETI.ui.panelOpen || ETI.ui.devOpen || ETI.dialogue.isBlocking) return;
+    if (dashTimer > 0 || dashCooldown > 0) return;
+    let dx = (keys.has("d") ? 1 : 0) - (keys.has("a") ? 1 : 0);
+    let dy = (keys.has("s") ? 1 : 0) - (keys.has("w") ? 1 : 0);
+    if (dx === 0 && dy === 0) { dx = lastDirX; dy = lastDirY; }  // use last heading
+    const mag = Math.hypot(dx, dy) || 1;
+    dashVX = dx / mag;
+    dashVY = dy / mag;
+    dashTimer = DASH_TIME;
+    dashCooldown = DASH_COOLDOWN;
+  }
+
   function lanePanelTop() { return laneMetrics.top; }
 
   // Map a biome to the content-panel entry to show. Spawn isn't a real section
@@ -78,6 +94,14 @@
   let scrollAccum = 0;
   let scrollActive = false;   // true briefly after a scroll, so he "walks"
   let _lastScrollStep = 0;    // this frame's scroll delta, for camera lockstep
+  // ---- dash (spacebar): a quick burst in the current movement direction ----
+  const DASH_SPEED = 1500;    // px/s burst velocity
+  const DASH_TIME = 0.16;     // seconds the burst lasts
+  const DASH_COOLDOWN = 0.42; // seconds before he can dash again
+  let dashTimer = 0;          // >0 while dashing
+  let dashCooldown = 0;       // >0 while on cooldown
+  let dashVX = 0, dashVY = 0; // dash direction (unit-ish) captured at press
+  let lastDirX = 0, lastDirY = -1; // last movement direction (default: up)
 
   // one unique arrival line per zone (lands + crossings)
   const enterLines = {};
@@ -539,6 +563,7 @@
       return;
     }
     if (k === "shift") { keys.add("shift"); return; }
+    if (k === " ") { startDash(); return; }
     if (k === "e") {
       if (nearest) nearest.action();
       return;
@@ -670,8 +695,24 @@
       // keyboard movement (digital)
       const mx = Math.max(-1, Math.min(1, right - left));
       const my = Math.max(-1, Math.min(1, down - up));
-      const vy = my * speed;
-      const vx = mx * speed * 0.7;
+      let vy = my * speed;
+      let vx = mx * speed * 0.7;
+
+      // remember the current heading so a dash with no key held reuses it
+      if (mx !== 0 || my !== 0) {
+        lastDirX = mx;
+        lastDirY = my;
+      }
+
+      // ---- dash: a short, fast burst in the captured direction ----
+      if (dashCooldown > 0) dashCooldown = Math.max(0, dashCooldown - dt);
+      let dashing = false;
+      if (dashTimer > 0) {
+        dashTimer = Math.max(0, dashTimer - dt);
+        dashing = true;
+        vx += dashVX * DASH_SPEED;
+        vy += dashVY * DASH_SPEED;
+      }
 
       // ---- drain scroll into vertical movement ----
       // A fraction of the accumulated wheel delta is applied each frame so
@@ -722,11 +763,13 @@
       if (movingLatched) { if ((speedMag < 4 && !scrollActive) || !actuallyMoved) movingLatched = false; }
       else { if ((speedMag > 10 || scrollActive) && actuallyMoved) movingLatched = true; }
       const moving = movingLatched;
-      M.setSprinting(sprint && moving);
+      // dashing counts as sprinting for the animation/label
+      const fast = sprint || (dashing && actuallyMoved);
+      M.setSprinting(fast && moving);
 
-      // Moving = walking; holding Shift while moving = running.
+      // Moving = walking; holding Shift (or dashing) while moving = running.
       if (moving) {
-        M.setState(sprint ? "running" : "walking");
+        M.setState(fast ? "running" : "walking");
       } else {
         M.setState("idle");
       }
