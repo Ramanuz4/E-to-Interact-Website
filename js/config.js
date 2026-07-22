@@ -217,9 +217,9 @@ ETI.CONFIG = {
      they're ready and fill in src.
      ============================================================ */
   ANIMATIONS: {
-    idle:    { src: "assets/mascot/idle.gif", gif: true, dispW: 90, dispH: 138 },
-    walking: { src: null, gif: true, dispW: 90, dispH: 138 },
-    running: { src: null, gif: true, dispW: 90, dispH: 138 },
+    idle:    { src: "assets/mascot/idle.gif", gif: true, dispW: 99, dispH: 145 },
+    walking: { src: null, gif: true, dispW: 99, dispH: 145 },
+    running: { src: null, gif: true, dispW: 99, dispH: 145 },
     // Directional walk art. When Vaugn is moving and facing left, the mascot
     // shows this dedicated left-walk GIF instead of mirroring the idle art.
     // (Its native aspect is ~403x589, so a touch wider than idle at the same
