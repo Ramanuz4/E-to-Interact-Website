@@ -517,7 +517,6 @@
     // menus eat input first
     if (ETI.ui.devKey && ETI.ui.devOpen) { ETI.ui.devKey(k); return; }
     if (ETI.ui.pauseOpen) { ETI.ui.pauseKey(k); return; }
-    if (mapOpen) { if (k === "escape" || k === "e" || k === "enter") closeMap(); return; }
 
     if (ETI.ui.panelOpen) {
       if (k === "e" || k === "escape" || k === "enter") ETI.ui.closePanel();
@@ -552,51 +551,56 @@
     keys.delete(k === "shift" ? "shift" : k);
   });
 
-  /* ---- scroll-driven movement ----
-     Wheel / trackpad scrolling moves Vaugn up and down the world. We capture
-     the wheel delta into an accumulator that the main loop drains into pos.y
-     (exactly like walking), so scroll and W/S stay in sync and Vaugn stays
-     pinned on screen while the world scrolls past him. Only active in play. */
+  /* ---- scroll routing: content panel vs world ----
+     Where the wheel goes depends on where the cursor is:
+       • Over the right-hand content panel: scroll THAT panel. Only once it's
+         hit the top (scrolling up) or bottom (scrolling down) does further
+         scrolling in that same direction fall through to move the world.
+       • Over the lane panel (or anywhere else): scroll the world — Vaugn moves
+         up/down while staying pinned, exactly as before.
+     The world movement is done by feeding an accumulator the main loop drains
+     into pos.y; the content panel scrolls natively (we just don't intercept). */
+  const cpInner = document.querySelector("#content-panel .cp-inner");
+  function cursorOverContentPanel(ev) {
+    const cp = document.getElementById("content-panel");
+    if (!cp) return false;
+    const r = cp.getBoundingClientRect();
+    return ev.clientX >= r.left && ev.clientX <= r.right &&
+           ev.clientY >= r.top && ev.clientY <= r.bottom;
+  }
   window.addEventListener("wheel", (ev) => {
     if (mode !== "play") return;
     if (ETI.ui.pauseOpen || ETI.ui.panelOpen || ETI.ui.devOpen || ETI.dialogue.isBlocking) return;
+
     // normalise delta: line-mode wheels report small integers, pixel-mode
     // large ones; scale both to comfortable world pixels per notch.
     let d = ev.deltaY;
-    if (ev.deltaMode === 1) d *= 16;        // lines -> ~px
-    else if (ev.deltaMode === 2) d *= window.innerHeight; // pages
+    if (ev.deltaMode === 1) d *= 16;                       // lines -> ~px
+    else if (ev.deltaMode === 2) d *= window.innerHeight;  // pages
+
+    // If the cursor is over the content panel and that panel can still scroll
+    // in this direction, let the browser scroll it and leave the world alone.
+    if (cpInner && cursorOverContentPanel(ev)) {
+      const atTop = cpInner.scrollTop <= 0;
+      const atBottom = cpInner.scrollTop + cpInner.clientHeight >= cpInner.scrollHeight - 1;
+      const scrollingUp = d < 0;
+      const scrollingDown = d > 0;
+      const canScrollPanel =
+        (scrollingDown && !atBottom) || (scrollingUp && !atTop);
+      if (canScrollPanel) {
+        // native scroll of the content panel — don't move the world
+        return;
+      }
+      // panel is at its edge in this direction: fall through to move the world
+    }
+
+    // world movement (cursor over the lane, or content panel at its edge)
     scrollAccum += d;
-    // prevent the page itself from scrolling; the world handles it
-    ev.preventDefault();
+    ev.preventDefault();  // stop the page itself from scrolling
   }, { passive: false });
 
-  /* ============================================================
-     TOUCH & ON-SCREEN CONTROLS
-     Virtual keycaps mirror the keyboard exactly (WASD, E, SHIFT,
-     ESC, MAP) so the control theme survives on any device.
-     ============================================================ */
-  // Touch UI only on real touch-primary devices — desktops (even hybrid
-  // touchscreen laptops with a mouse) stay on keyboard. We deliberately
-  // don't gate this on viewport width: large tablets in landscape (an
-  // iPad Pro is ~1366px wide there) are still touch-only devices with no
-  // keyboard, and excluding them left the player stuck with no controls
-  // at all. The CSS hard-gate for (hover:hover)+(pointer:fine) below
-  // still protects genuine desktops/mice regardless of screen size.
-  function evalTouch() {
-    const coarse = window.matchMedia("(pointer: coarse)").matches;
-    const noHover = window.matchMedia("(hover: none)").matches;
-    const hasTouch = (navigator.maxTouchPoints || 0) > 0;
-    const on = coarse && noHover && hasTouch;
-    document.body.classList.toggle("touch", on);
-    return on;
-  }
-  evalTouch();
-  let _tzTimer;
-  window.addEventListener("resize", () => {
-    refreshLaneMetrics();
-    clearTimeout(_tzTimer);
-    _tzTimer = setTimeout(evalTouch, 200);
-  });
+  // Keep cached lane metrics fresh on window resize (desktop-only site).
+  window.addEventListener("resize", refreshLaneMetrics);
 
   /** Central "E was pressed" behaviour shared by key and button. */
   function actionE() {
@@ -614,148 +618,30 @@
     if (mode === "onboard") { onboard.key("escape"); return; }
     if (ETI.ui.devOpen) { ETI.ui.devKey("escape"); return; }
     if (ETI.ui.pauseOpen) { ETI.ui.pauseKey("escape"); return; }
-    if (mapOpen) { closeMap(); return; }
     if (ETI.ui.panelOpen) { ETI.ui.closePanel(); return; }
     ETI.ui.openPause();
   }
 
-  // ---- analog joystick (replaces the D-pad on touch) ----
-  const joy = { x: 0, y: 0 };
-  (function initJoystick() {
-    const base = document.getElementById("joystick");
-    if (!base) return;
-    const knob = document.getElementById("joy-knob");
-    let active = false, pid = null, cx = 0, cy = 0, R = 1;
-    let lastDir = null;
+  // ---- E: click the interact prompt / dialogue with the mouse ----
 
-    function setKnob(dx, dy) { knob.style.transform = `translate(${dx}px, ${dy}px)`; }
-
-    function engage() {
-      if (mode !== "play") return false;
-      if (ETI.ui.pauseOpen || ETI.ui.panelOpen || ETI.ui.devOpen || mapOpen || ETI.dialogue.isBlocking) return false;
-      return true;
-    }
-
-    function track(e) {
-      if (!active || e.pointerId !== pid) return;
-      if (!engage()) { joy.x = joy.y = 0; setKnob(0, 0); return; }
-      let dx = e.clientX - cx, dy = e.clientY - cy;
-      const d = Math.hypot(dx, dy);
-      if (d > R) { dx = dx / d * R; dy = dy / d * R; }
-      setKnob(dx, dy);
-      joy.x = dx / R; joy.y = dy / R;
-      // discrete direction "pulses" so the secret code works on touch too:
-      // push past 55%, return to centre, push again — each push counts once
-      let dir = null;
-      if (Math.hypot(joy.x, joy.y) > 0.55) {
-        dir = Math.abs(joy.y) >= Math.abs(joy.x)
-          ? (joy.y < 0 ? "w" : "s")
-          : (joy.x < 0 ? "a" : "d");
-      }
-      if (dir && dir !== lastDir) pushSecret(dir);
-      lastDir = dir;
-    }
-
-    base.addEventListener("pointerdown", (e) => {
-      e.preventDefault();
-      if (mode === "boot") { startFromBoot(); return; }
-      const r = base.getBoundingClientRect();
-      cx = r.left + r.width / 2; cy = r.top + r.height / 2;
-      R = Math.max(1, r.width / 2 - 12);
-      active = true; pid = e.pointerId;
-      try { base.setPointerCapture(pid); } catch (err) {}
-      track(e);
-    });
-    base.addEventListener("pointermove", track);
-    const end = (e) => {
-      if (e.pointerId !== pid) return;
-      active = false; pid = null; lastDir = null;
-      joy.x = joy.y = 0; setKnob(0, 0);
-    };
-    base.addEventListener("pointerup", end);
-    base.addEventListener("pointercancel", end);
-    base.addEventListener("contextmenu", e => e.preventDefault());
-  })();
-
-  // ---- E: a real button (fires on release, so the panel it opens
-  //      doesn't get closed by the release's ghost click) ----
-  const eBtn = document.querySelector('#actions [data-key="e"]');
-  if (eBtn) eBtn.addEventListener("click", (e) => { e.preventDefault(); actionE(); });
-
-  // ---- sprint toggle (instant on touch-down feels right) ----
-  const sprintBtn = document.querySelector('[data-action="sprint"]');
-  let sprintLatched = false;
-  if (sprintBtn) sprintBtn.addEventListener("pointerdown", (e) => {
-    e.preventDefault();
-    sprintLatched = !sprintLatched;
-    sprintBtn.classList.toggle("on", sprintLatched);
-    if (sprintLatched) keys.add("shift"); else keys.delete("shift");
-  });
-
-  // ---- ESC + MAP: click-based buttons ----
-  const pauseBtn = document.querySelector('[data-action="pause"]');
-  if (pauseBtn) pauseBtn.addEventListener("click", (e) => { e.preventDefault(); actionEsc(); });
-
-  const mapEl = document.getElementById("travel-sheet");
-  const mapBtn = document.querySelector('[data-action="map"]');
-  let mapOpen = false;
-  function openMap() {
-    if (mode === "boot" || ETI.ui.pauseOpen || ETI.ui.devOpen) return;
-    if (ETI.ui.panelOpen) ETI.ui.closePanel();
-    mapOpen = true;
-    mapEl.classList.remove("hidden");
-  }
-  function closeMap() { mapOpen = false; mapEl.classList.add("hidden"); }
-  if (mapBtn) mapBtn.addEventListener("click", (e) => { e.preventDefault(); mapOpen ? closeMap() : openMap(); });
-  document.getElementById("travel-close").addEventListener("click", closeMap);
-  mapEl.addEventListener("click", (e) => { if (e.target === mapEl) closeMap(); });
-  document.querySelectorAll("#travel-list li").forEach(li => {
-    li.addEventListener("click", () => { closeMap(); startTravel(li.dataset.travel); });
-  });
-
-  // ---- shortcut buttons (navbar + legacy keycaps): same destinations ----
+  // ---- navbar shortcut buttons: travel to each land ----
   document.querySelectorAll("[data-shortcut]").forEach(btn => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
       if (mode === "boot" || ETI.ui.pauseOpen || ETI.ui.panelOpen || ETI.ui.devOpen || ETI.dialogue.isBlocking) return;
-      closeMap();
-      closeNav();
       startTravel(btn.dataset.shortcut);
     });
   });
 
-  // ---- hamburger nav drawer (small screens) ----
-  const navToggle = document.getElementById("nav-toggle");
-  const navLinks = document.getElementById("nav-links");
-  const navbar = document.getElementById("navbar");
-  function closeNav() {
-    if (!navToggle) return;
-    navToggle.setAttribute("aria-expanded", "false");
-    navToggle.setAttribute("aria-label", "Open menu");
-    if (navbar) navbar.classList.remove("nav-open");
-  }
-  function openNav() {
-    if (!navToggle) return;
-    navToggle.setAttribute("aria-expanded", "true");
-    navToggle.setAttribute("aria-label", "Close menu");
-    if (navbar) navbar.classList.add("nav-open");
-  }
-  if (navToggle) {
-    navToggle.addEventListener("click", (e) => {
-      e.preventDefault();
-      navToggle.getAttribute("aria-expanded") === "true" ? closeNav() : openNav();
-    });
-  }
-  // logo reloads to Home (spawn)
+  // logo travels to Home (spawn)
   const navLogo = document.getElementById("nav-logo");
   if (navLogo) navLogo.addEventListener("click", (e) => {
     e.preventDefault();
     if (mode === "boot" || ETI.dialogue.isBlocking) return;
-    closeNav();
     startTravel("spawn");
   });
 
-  // ---- tap-to-advance dialogue, tap the prompt to interact ----
+  // ---- click dialogue to advance, click the prompt to interact ----
   document.getElementById("dialogue").addEventListener("click", () => ETI.dialogue.advance());
   promptEl.addEventListener("click", () => { if (mode === "play" && nearest) nearest.action(); });
 
@@ -781,9 +667,9 @@
       const sprint = keys.has("shift");
       const speed = sprint ? C.sprintSpeed : C.walkSpeed;
 
-      // keyboard (digital) + joystick (analog), clamped to full deflection
-      const mx = Math.max(-1, Math.min(1, (right - left) + joy.x));
-      const my = Math.max(-1, Math.min(1, (down - up) + joy.y));
+      // keyboard movement (digital)
+      const mx = Math.max(-1, Math.min(1, right - left));
+      const my = Math.max(-1, Math.min(1, down - up));
       const vy = my * speed;
       const vx = mx * speed * 0.7;
 
@@ -919,9 +805,6 @@
     }
   });
 
-  // tapping the boot screen starts too, but only on touch devices —
-  // desktop/mouse users must press E.
-  bootEl.addEventListener("click", () => {
-    if (document.body.classList.contains("touch")) startFromBoot();
-  });
+  // click the boot screen to start (mouse), same as pressing E
+  bootEl.addEventListener("click", () => { startFromBoot(); });
 })();

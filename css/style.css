@@ -48,8 +48,6 @@ body{
 .hidden{ display:none !important; }
 
 html, body{ touch-action:manipulation; }
-body.touch .kb-only{ display:none !important; }
-body:not(.touch) .touch-only{ display:none !important; }
 
 /* ============================================================
    SKY — two stacked layers, JS crossfades them
@@ -1203,30 +1201,6 @@ body[data-time="night"] #vignette{
   padding:1px 4px; line-height:1;
 }
 
-/* hamburger — hidden on desktop */
-#nav-toggle{
-  display:none;
-  width:48px; height:48px; padding:0;
-  background:var(--ui-bg); border:3px solid var(--ui-border);
-  cursor:pointer; pointer-events:auto;
-  align-items:center; justify-content:center;
-}
-.nav-bars{ display:flex; flex-direction:column; gap:5px; width:22px; }
-.nav-bars span{
-  display:block; height:3px; width:100%; background:var(--paper);
-  transition:transform .2s ease, opacity .2s ease;
-}
-/* animated X when open */
-#nav-toggle[aria-expanded="true"] .nav-bars span:nth-child(1){ transform:translateY(8px) rotate(45deg); }
-#nav-toggle[aria-expanded="true"] .nav-bars span:nth-child(2){ opacity:0; }
-#nav-toggle[aria-expanded="true"] .nav-bars span:nth-child(3){ transform:translateY(-8px) rotate(-45deg); }
-
-/* The navbar replaces the old on-screen navigation: the destination keycaps
-   (Home/Games/Team/Posts/Contact) and the MAP fast-travel button are no longer
-   needed on any screen. Menu (pause) and the movement controls stay. */
-#shortcut-keys{ display:none !important; }
-[data-action="map"]{ display:none !important; }
-
 #biome-tag{
   position:absolute; top:calc(var(--nav-h) + 14px + env(safe-area-inset-top)); left:calc(18px + env(safe-area-inset-left));
   font-family:var(--font-display); font-size:12px; letter-spacing:1px;
@@ -1494,79 +1468,6 @@ body[data-time="night"] #vignette{
   #screen-gate .gate-sub{ font-family:var(--font-body); font-size:15px; color:rgba(245,239,220,.75); }
 }
 
-@media (max-width:900px){
-  /* phones & small tablets keep Vaugn's lane centred (single-column layout) */
-  :root{ --lane-center:50%; }
-  #nav-toggle{ display:flex; }
-  #nav-links{
-    position:absolute; top:100%; left:0; right:0;
-    flex-direction:column; align-items:stretch; gap:0;
-    background:var(--ui-bg);
-    border-bottom:3px solid var(--ui-border);
-    max-height:0; overflow:hidden;
-    transition:max-height .28s ease;
-    pointer-events:auto;
-  }
-  #navbar.nav-open #nav-links{ max-height:70vh; overflow:auto; }
-  #nav-links .nav-btn{
-    width:100%; min-width:0;
-    flex-direction:row; justify-content:space-between;
-    border:none; border-top:2px solid rgba(245,239,220,.18);
-    box-shadow:none; border-radius:0;
-    padding:16px 22px; font-size:13px;
-  }
-  #nav-links .nav-btn:first-child{ border-top:none; }
-  #nav-links .nav-btn .nav-label{ font-size:13px; }
-  #nav-links .nav-btn .nav-key{ font-size:9px; }
-  #nav-links .nav-btn:active{ transform:none; }
-  #nav-logo{ height:44px; }
-}
-
-@media (max-width:760px){
-  /* Sit the welcome popup in the open band between the shortcut area and the
-     joystick, instead of up top. Centred in that lower-middle gap. */
-  #welcome-banner{
-    top:auto; bottom:calc(210px + env(safe-area-inset-bottom));
-    width:min(340px, 88vw);
-    padding:13px 16px 15px;
-  }
-  #welcome-banner .wb-badge{ font-size:7px; padding:4px 7px 3px; }
-  #welcome-banner p{ font-size:17px; }
-  #welcome-banner .wb-sub{ font-size:14px; }
-}
-/* tablets (touch, 761–1024px): same idea — drop it into the lower-middle
-   band so it clears the right-side shortcut column. */
-@media (min-width:761px) and (max-width:1024px){
-  body.touch #welcome-banner{
-    top:auto; bottom:calc(150px + env(safe-area-inset-bottom));
-    width:min(520px, 72vw);
-  }
-}
-/* shorter phones (≤700px tall): the middle band is smaller, so make the
-   popup very compact and sit it just above the joystick, with its top edge
-   below the shortcut column so nothing overlaps. */
-@media (max-width:760px) and (max-height:700px){
-  #welcome-banner{
-    bottom:calc(132px + env(safe-area-inset-bottom));
-    width:min(290px, 80vw);
-    padding:8px 12px 10px;
-  }
-  #welcome-banner p{ font-size:14px; line-height:1.28; }
-  #welcome-banner .wb-sub{ font-size:12px; margin-top:3px; }
-  #welcome-banner .wb-badge{ margin-bottom:5px; font-size:6px; padding:3px 6px 2px; }
-  /* Not enough vertical room here for both the shortcut column and the
-     popup — tuck the column away for the few seconds the popup is visible.
-     It returns automatically the moment the welcome banner finishes. */
-  body.welcome-showing #shortcut-keys{
-    opacity:0; pointer-events:none; transition:opacity .3s ease;
-  }
-}
-@media (max-height:600px){
-  /* short landscape: keep it clear of the on-screen controls */
-  #welcome-banner{ top:auto; bottom:calc(150px + env(safe-area-inset-bottom)); width:min(360px, 70vw); padding:10px 14px 12px; }
-  #welcome-banner p{ font-size:15px; }
-  #welcome-banner .wb-sub{ font-size:13px; }
-}
 body.reduce-motion #welcome-banner{ animation:none; opacity:1; }
 body.reduce-motion #welcome-banner.hide{ animation:none; opacity:0; transition:opacity .3s ease; }
 
@@ -1661,14 +1562,12 @@ body.reduce-motion #welcome-banner.hide{ animation:none; opacity:0; transition:o
 .ob-keys{ margin:14px 0; display:flex; flex-direction:column; gap:10px; }
 .ob-keys.ob-keys-tight{ gap:7px; }
 .ob-krow{ display:flex; align-items:center; gap:10px; font-size:17px; color:rgba(245,239,220,.9); flex-wrap:wrap; }
-.ob-krow .key, .tkeymini{
+.ob-krow .key{
   display:inline-grid; place-items:center; min-width:26px; height:26px;
   padding:0 7px; font-family:var(--font-display); font-size:10px;
   background:var(--paper); color:var(--ink); border:2px solid var(--ink);
   box-shadow:0 2px 0 var(--ink); border-radius:3px; flex:0 0 auto;
 }
-.tkeymini{ margin:0 2px; }
-.tkeymini.big-e{ min-width:34px; height:34px; font-size:13px; background:var(--accent2); }
 .mouseicon, .reloadicon, .fingericon{ font-size:20px; width:26px; text-align:center; flex:0 0 auto; }
 .reloadicon{ color:var(--accent); }
 
@@ -1980,114 +1879,6 @@ body.reduce-motion #welcome-banner.hide{ animation:none; opacity:0; transition:o
 .dev-title{ font-family:var(--font-display); font-size:clamp(14px,3vw,22px); color:var(--accent); letter-spacing:3px; }
 .dev-sub{ margin:14px 0 6px; color:rgba(245,239,220,.7); font-size:21px; }
 
-/* ============================================================
-   ON-SCREEN VIRTUAL KEYS (touch devices; body.touch set by JS)
-   ============================================================ */
-#touch-controls, #top-actions{ display:none; }
-
-.tkey{
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
-  width:60px; height:60px; padding:0;
-  background:var(--ui-bg); color:var(--paper);
-  border:3px solid var(--ui-border);
-  box-shadow:0 4px 0 rgba(0,0,0,.55);
-  font-family:var(--font-display);
-  touch-action:none; -webkit-touch-callout:none; user-select:none;
-  cursor:pointer;
-}
-.tkey span{ font-size:16px; line-height:1; }
-.tkey b{ font-size:9px; color:var(--accent); font-weight:normal; }
-.tkey:focus-visible{ outline:2px solid var(--accent2); outline-offset:2px; }
-.tkey:active, .tkey.on{
-  background:var(--accent); border-color:var(--ink);
-  transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,.55);
-}
-.tkey:active b, .tkey.on b, .tkey:active span, .tkey.on span{ color:var(--ink); }
-
-body.touch #touch-controls{
-  display:flex; justify-content:space-between; align-items:flex-end;
-  position:fixed; left:0; right:0;
-  bottom:calc(12px + env(safe-area-inset-bottom));
-  padding:0 14px; z-index:26;
-  pointer-events:none;
-}
-#touch-controls > *{ pointer-events:auto; }
-
-/* ---- joystick (WASD labels keep the keyboard theme) ---- */
-#joystick{
-  position:relative; width:124px; height:124px; border-radius:50%;
-  background:rgba(13,13,20,.85);
-  border:3px solid var(--ui-border);
-  box-shadow:0 4px 0 rgba(0,0,0,.5), inset 0 0 22px rgba(0,0,0,.6);
-  touch-action:none; -webkit-touch-callout:none;
-}
-#joy-knob{
-  position:absolute; left:50%; top:50%;
-  width:52px; height:52px; margin:-26px 0 0 -26px;
-  border-radius:50%;
-  background:var(--paper); border:3px solid var(--ink);
-  box-shadow:0 3px 0 var(--ink);
-  pointer-events:none;
-  transition:transform .08s linear;
-}
-.jlabel{
-  position:absolute; font-family:var(--font-display);
-  font-size:8px; color:rgba(255,210,74,.7); pointer-events:none;
-}
-.jlabel.jw{ top:6px; left:50%; transform:translateX(-50%); }
-.jlabel.js{ bottom:6px; left:50%; transform:translateX(-50%); }
-.jlabel.ja{ left:7px; top:50%; transform:translateY(-50%); }
-.jlabel.jd{ right:7px; top:50%; transform:translateY(-50%); }
-
-#actions{ display:flex; flex-direction:column; align-items:flex-end; gap:10px; }
-.tkey.big{ width:68px; height:68px; }
-.tkey.big b{ font-size:20px; color:var(--paper); }
-.tkey.wide{ width:68px; height:38px; }
-
-body.touch #top-actions{
-  display:flex; flex-direction:column; gap:7px;
-  position:fixed; top:calc(126px + env(safe-area-inset-top)); right:calc(16px + env(safe-area-inset-right)); z-index:26;
-}
-#top-actions .tkey{ width:52px; height:34px; }
-#top-actions .tkey b{ font-size:8px; }
-
-/* shortcut keycaps — right column below ESC/MAP, touch only */
-#shortcut-keys{ display:none; }
-body.touch #shortcut-keys{
-  display:flex; flex-direction:column; gap:6px;
-  position:fixed; top:calc(218px + env(safe-area-inset-top)); right:calc(16px + env(safe-area-inset-right)); z-index:26;
-}
-#shortcut-keys .tkey{
-  flex-direction:row; justify-content:center; gap:0;
-  width:100px; height:30px; padding:0 9px;
-}
-#shortcut-keys .tkey b{ display:none; }
-#shortcut-keys .tkey .lbl{ font-size:11px; color:var(--paper); font-style:normal; letter-spacing:.5px; }
-#shortcut-keys .tkey:active .lbl, #shortcut-keys .tkey.on .lbl{ color:var(--ink); }
-
-body.touch #hint-bar{ display:none; }
-body.touch #prompt{ pointer-events:auto; cursor:pointer; }
-body.touch .pause-hint, body.touch .pane-hint, body.touch .panel-hint{ display:none; }
-
-/* Fast travel sheet */
-#travel-sheet{
-  position:fixed; inset:0; z-index:39;
-  background:rgba(5,5,10,.72);
-  display:flex; align-items:center; justify-content:center;
-}
-.travel-box{
-  background:var(--ui-bg); border:4px solid var(--ui-border);
-  box-shadow:0 10px 0 rgba(0,0,0,.55);
-  padding:24px 30px; text-align:center; min-width:min(360px, 88vw);
-}
-#travel-list{ list-style:none; margin:14px 0; text-align:left; }
-#travel-list li{
-  font-family:var(--font-display); font-size:12px;
-  padding:13px 8px; color:rgba(245,239,220,.85); cursor:pointer;
-  border-bottom:2px dashed rgba(245,239,220,.15);
-}
-#travel-list li:active{ color:var(--accent); }
-
 /* Back buttons in menus */
 .back-btn{
   display:inline-block; margin-top:14px; padding:9px 18px 7px;
@@ -2139,145 +1930,4 @@ body.reduce-motion *,
 body.reduce-motion *::before,
 body.reduce-motion *::after{
   transition-duration:.12s !important;
-}
-
-/* ============================================================
-   RESPONSIVE — phones & small tablets
-   ============================================================ */
-@media (max-width:760px){
-  body{ font-size:20px; }
-  #biome-tag{ font-size:9px; padding:8px 10px; top:calc(12px + env(safe-area-inset-top)); left:calc(12px + env(safe-area-inset-left)); }
-  #reload-btn{ top:calc(52px + env(safe-area-inset-top)); left:calc(12px + env(safe-area-inset-left)); height:34px; padding:0 10px; }
-  #reload-btn .reload-icon{ font-size:16px; }
-  #reload-btn .reload-text{ font-size:10px; }
-  #clock{ width:58px; height:58px; top:calc(12px + env(safe-area-inset-top)); right:calc(12px + env(safe-area-inset-right)); }
-  .dial .half{ font-size:22px; }
-  .time-badge{ font-size:6px; bottom:-20px; padding:3px 6px 2px; }
-  body.touch #top-actions{ top:calc(120px + env(safe-area-inset-top)); right:calc(12px + env(safe-area-inset-right)); }
-
-  #dialogue{
-    width:min(560px, 94vw);
-    padding:12px 14px; gap:10px;
-  }
-  #dialogue .portrait{ width:50px; height:50px; }
-  #dialogue-text{ font-size:20px; min-height:48px; }
-
-  /* onboarding: compact on phones */
-  .ob-card{ padding:18px 16px 14px; max-height:92vh; }
-  .ob-page h2{ font-size:16px; }
-  .ob-page p{ font-size:16px; }
-  .ob-page .ob-fine{ font-size:13px; }
-  .ob-art{ font-size:26px; margin:12px 0; }
-  .ob-krow{ font-size:15px; gap:8px; }
-  .ob-btn{ font-size:10px; padding:9px 12px; }
-  .ob-skip{ font-size:8px; }
-  .ob-badge{ font-size:8px; padding:6px 8px; }
-
-  /* panels: compact so they don't swallow the screen; close button pinned */
-  .panel-card{ padding:18px 16px; max-height:78vh; width:min(560px, 94vw); }
-  .panel-biome{ font-size:14px; letter-spacing:2px; }
-  .panel-title{ margin:6px 0 12px; font-size:clamp(15px,4.5vw,20px); }
-  .panel-body p{ font-size:17px; line-height:1.4; margin:9px 0; }
-  .panel-body .fine{ font-size:15px; }
-  #panel-close{ width:38px; height:38px; font-size:15px; }
-
-  /* contact rows stack vertically so nothing overflows */
-  .contact-list li{ font-size:17px; padding:11px 2px; }
-  .contact-list li b{ font-size:13px; letter-spacing:1px; opacity:.85; }
-  .contact-list span{ flex:1 1 100%; text-align:left; font-size:17px; }
-
-  /* team/games cards: 2-up so faces aren't giant, single col only if tiny */
-  .cards.team{ grid-template-columns:repeat(2, 1fr); }
-  .tcard{ padding:9px; font-size:16px; }
-  .tcard span{ font-size:14px; }
-  .tface{ width:44px; height:44px; }
-
-  .games-grid{ grid-template-columns:repeat(2, 1fr); gap:10px; }
-  .gcard{ padding:9px; font-size:16px; }
-  .gcard-body b{ font-size:16px; }
-  .gcard-body span{ font-size:13px; }
-  .gart{ height:54px; }
-  .gdetail-hero{ height:100px; }
-  .gdetail-desc{ font-size:17px; }
-  .gdetail-features li{ font-size:16px; }
-  .gdetail-tagline{ font-size:16px; }
-
-  .posts-tabs{ gap:6px; margin:8px 0 2px; padding-bottom:12px; }
-  .ptab{ font-size:9px; padding:7px 9px 6px; }
-
-  .post{ padding:14px; }
-  .post h3{ font-size:19px; }
-  .post p{ font-size:17px; }
-  .jobs li{ font-size:18px; }
-
-  .pause-box, .pause-pane{ padding:18px 20px; min-width:min(420px, 92vw); max-height:86vh; overflow:auto; }
-  #pause-list li, #settings-list li, #dev-list li{ font-size:11px; padding:11px 6px; }
-  .pause-pane td{ font-size:19px; }
-  .pause-pane p{ font-size:18px; line-height:1.4; }
-  .sign .plate{ font-size:15px; padding:14px 18px 12px; }
-  .sign .sub{
-    font-size:15px; letter-spacing:1px;
-    padding:5px 12px 3px; margin-top:40px;
-    max-width:min(62vw, 240px);
-    line-height:1.25;
-  }
-  #prompt{ font-size:18px; }
-  .dev-box{ padding:24px 22px; max-height:86vh; overflow:auto; }
-  .travel-box{ padding:18px 20px; max-height:86vh; overflow:auto; min-width:min(340px,90vw); }
-  #travel-list li{ font-size:11px; padding:12px 6px; }
-
-  /* Rich section decor is authored for wide screens. On phones, clip each
-     section so nothing can spill sideways, and gently shrink the largest
-     structural props so they don't crowd Vaugn. Trees/bushes keep their
-     own scale variants — we only touch the big architectural pieces. */
-  .section{ overflow:hidden; }
-  .tower{ transform:scale(.62); transform-origin:top center; }
-  .gatehouse{ transform:scale(.66); transform-origin:top center; }
-  .tent{ transform:scale(.66); transform-origin:bottom center; }
-  .arcade, .console, .console.cr, .whiteboard, .satellite{ transform:scale(.62); transform-origin:center; }
-  .desk{ transform:scale(.7); transform-origin:bottom center; }
-  .npc{ transform:scale(.85); transform-origin:bottom center; }
-}
-
-/* touch devices: lift the dialogue clear of the controls */
-body.touch #dialogue{
-  bottom:calc(166px + env(safe-area-inset-bottom));
-}
-@media (max-width:760px){
-  /* trimmer controls on phones so the play area stays open */
-  #joystick{ width:116px; height:116px; }
-  #joy-knob{ width:48px; height:48px; margin:-24px 0 0 -24px; }
-  .tkey.big{ width:64px; height:64px; }
-  .tkey.big b{ font-size:19px; }
-  .tkey.wide{ width:64px; height:36px; }
-  body.touch #top-actions{ top:calc(120px + env(safe-area-inset-top)); right:calc(12px + env(safe-area-inset-right)); }
-  body.touch #top-actions .tkey{ width:50px; height:32px; }
-  body.touch #shortcut-keys{ top:calc(206px + env(safe-area-inset-top)); right:calc(12px + env(safe-area-inset-right)); gap:5px; }
-  #shortcut-keys .tkey{ width:72px; height:26px; }
-  #shortcut-keys .tkey .lbl{ font-size:9px; letter-spacing:.3px; }
-  body.touch #dialogue{ bottom:calc(156px + env(safe-area-inset-bottom)); }
-}
-@media (max-height:600px){
-  body.touch #dialogue{ bottom:calc(140px + env(safe-area-inset-bottom)); }
-  #joystick{ width:104px; height:104px; }
-  #joy-knob{ width:44px; height:44px; margin:-22px 0 0 -22px; }
-  .tkey.big{ width:58px; height:58px; }
-  /* On short landscape screens there's no room for the shortcut column
-     without it colliding with the action buttons — hide it; MAP still gives
-     full fast-travel access to every land. */
-  body.touch #shortcut-keys{ display:none; }
-}
-
-
-/* ============================================================
-   HARD GATE — fine-pointer devices (desktops with a mouse) can
-   never display the touch rig, even if detection misfires.
-   ============================================================ */
-@media (hover: hover) and (pointer: fine){
-  #touch-controls, #top-actions, #shortcut-keys{ display:none !important; }
-  body.touch #hint-bar{ display:flex !important; }
-  body.touch .kb-only{ display:revert !important; }
-  body.touch .touch-only{ display:none !important; }
-  body.touch .pause-hint, body.touch .pane-hint, body.touch .panel-hint{ display:block !important; }
-  body.touch #dialogue{ bottom:34px; }
 }

@@ -95,11 +95,6 @@
         <img src="assets/brand/logo.png" alt="E to Interact" />
       </a>
 
-      <!-- hamburger toggle (small screens only) -->
-      <button id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
-        <span class="nav-bars"><span></span><span></span><span></span></span>
-      </button>
-
       <div id="nav-links">
         <button class="nav-btn" data-shortcut="spawn">
           <span class="nav-label">Home</span><span class="nav-key">H</span>
@@ -163,7 +158,7 @@
     <div class="text-wrap">
       <div id="dialogue-name">VAUGN</div>
       <div id="dialogue-text"></div>
-      <div id="dialogue-next"><span class="kb-only">▼ E</span><span class="touch-only">▼ TAP</span></div>
+      <div id="dialogue-next"><span>▼ E</span></div>
     </div>
   </div>
 
@@ -183,7 +178,7 @@
       </div>
 
       <!-- ===== KEYBOARD / DESKTOP PAGES ===== -->
-      <div class="ob-pages kb-only">
+      <div class="ob-pages">
         <div class="ob-page" data-badge="WELCOME">
           <h2>Welcome to the world</h2>
           <p>This whole site is one tall game world. You explore it as <b>Vaugn</b>, our ghost mascot — walking land to land instead of scrolling a page.</p>
@@ -241,60 +236,6 @@
         </div>
       </div>
 
-      <!-- ===== TOUCH / MOBILE PAGES ===== -->
-      <div class="ob-pages touch-only">
-        <div class="ob-page" data-badge="WELCOME">
-          <h2>Welcome to the world</h2>
-          <p>This whole site is one tall game world. You explore it as <b>Vaugn</b>, our ghost mascot — walking land to land instead of scrolling.</p>
-          <div class="ob-art">🌲 🏰 🏠 🛰 ☁</div>
-          <p class="ob-fine">Five lands stack up: Forest, Castle, Studio, Space Station and Sky Temple.</p>
-        </div>
-        <div class="ob-page" data-badge="MOVEMENT">
-          <h2>Use the joystick</h2>
-          <div class="ob-stickdemo">
-            <div class="ob-stick"><span class="jl jw">W</span><span class="jl ja">A</span><span class="jl js">S</span><span class="jl jd">D</span><div class="ob-knob"></div></div>
-          </div>
-          <p>Drag the <b>joystick</b> (bottom-left) to move Vaugn. Push up to climb into the next land. Push further from the centre to move faster and run.</p>
-        </div>
-        <div class="ob-page" data-badge="INTERACT">
-          <h2>Tap to act</h2>
-          <div class="ob-keys">
-            <div class="ob-krow"><span class="tkeymini big-e">E</span><span>Tap the big E (bottom-right) at a glowing sign</span></div>
-            <div class="ob-krow"><span class="fingericon">👆</span><span>Or tap signs &amp; dialogue directly</span></div>
-          </div>
-          <p>When a signpost glows, tap <b>E</b> to open that section. The camera follows you automatically — no gestures needed.</p>
-        </div>
-        <div class="ob-page" data-badge="NAVIGATION">
-          <h2>Fast travel</h2>
-          <p>Tap <span class="tkeymini">MAP</span> (top-right) for the travel sheet, or use the shortcut buttons down the right edge:</p>
-          <div class="ob-keys ob-keys-tight">
-            <div class="ob-krow"><span class="tkeymini">H</span><span>Home &nbsp;·&nbsp; <span class="tkeymini">G</span> Games &nbsp;·&nbsp; <span class="tkeymini">T</span> Team</span></div>
-            <div class="ob-krow"><span class="tkeymini">P</span><span>Posts &nbsp;·&nbsp; <span class="tkeymini">C</span> Contact</span></div>
-          </div>
-        </div>
-        <div class="ob-page" data-badge="UI &amp; MENU">
-          <h2>Buttons &amp; menu</h2>
-          <div class="ob-keys">
-            <div class="ob-krow"><span class="tkeymini">Menu</span><span>Top-right: open the menu &amp; settings</span></div>
-            <div class="ob-krow"><span class="reloadicon">↻</span><span>Top-left: reload the world anytime</span></div>
-          </div>
-          <p class="ob-fine">The menu also has Settings for particles, text speed, reduced motion, and the day/night auto-cycle.</p>
-        </div>
-        <div class="ob-page" data-badge="DAY &amp; NIGHT">
-          <h2>Turn the clock</h2>
-          <p>Top-right there's a <b>clock</b> — sun on top, moon on bottom. It turns slowly on its own, or <b>tap it</b> to instantly flip between <b>day</b> and <b>night</b>.</p>
-          <div class="ob-clockdemo">
-            <div class="ob-clock-face">
-              <div class="ob-half sun on">☀</div>
-              <div class="ob-half moon">☾</div>
-            </div>
-            <div class="ob-clock-label">DAY</div>
-          </div>
-          <p>The <b>DAY</b> or <b>NIGHT</b> badge below the clock shows which mode is active. The whole world shifts: sky, stars, lanterns, fireflies, and glowing screens.</p>
-          <p class="ob-fine">Give it a tap once you're exploring. Menu → Settings can stop the auto cycle.</p>
-        </div>
-      </div>
-
       <div class="ob-nav">
         <button id="ob-back" class="ob-btn ghost">‹ Previous</button>
         <div id="ob-dots" class="ob-dots"></div>
@@ -308,10 +249,8 @@
     <div class="boot-bar"></div>
     <img id="boot-logo" src="assets/brand/logo.png" alt="ET Interact" />
     <div class="boot-tagline">Designing worlds. Building games. Creating unforgettable interactive experiences.</div>
-    <div class="boot-press blink kb-only"><span class="key">E</span> to Start</div>
-    <div class="boot-press blink touch-only">Tap to Start</div>
-    <div class="boot-note kb-only">Best experienced with a keyboard.</div>
-    <div class="boot-note touch-only">Touch controls ready.</div>
+    <div class="boot-press blink"><span class="key">E</span> to Start</div>
+    <div class="boot-note">Best experienced with a keyboard.</div>
     <div class="boot-bar"></div>
   </div>
 
@@ -466,48 +405,6 @@
 
   <!-- Level transition flash -->
   <div id="fade"></div>
-
-  <!-- ============ ON-SCREEN VIRTUAL KEYS (touch devices) ============ -->
-  <div id="touch-controls">
-    <div id="joystick" aria-label="Move Vaugn">
-      <span class="jlabel jw">W</span>
-      <span class="jlabel ja">A</span>
-      <span class="jlabel js">S</span>
-      <span class="jlabel jd">D</span>
-      <div id="joy-knob"></div>
-    </div>
-    <div id="actions">
-      <button class="tkey wide" data-action="sprint"><b>SHIFT</b></button>
-      <button class="tkey big" data-key="e"><b>E</b></button>
-    </div>
-  </div>
-  <div id="top-actions">
-    <button class="tkey small" data-action="pause"><b>Menu</b></button>
-    <button class="tkey small" data-action="map"><b>MAP</b></button>
-  </div>
-  <!-- shortcut buttons: destination names only (touch) -->
-  <div id="shortcut-keys">
-    <button class="tkey small" data-shortcut="spawn"><span class="lbl">Home</span></button>
-    <button class="tkey small" data-shortcut="castle"><span class="lbl">Games</span></button>
-    <button class="tkey small" data-shortcut="studio"><span class="lbl">Team</span></button>
-    <button class="tkey small" data-shortcut="space"><span class="lbl">Posts</span></button>
-    <button class="tkey small" data-shortcut="temple"><span class="lbl">Contact</span></button>
-  </div>
-
-  <!-- Fast travel sheet (opened by MAP on touch) -->
-  <div id="travel-sheet" class="hidden">
-    <div class="travel-box">
-      <div class="pane-title">FAST TRAVEL</div>
-      <ul id="travel-list">
-        <li data-travel="spawn"><span class="key">H</span> Spawn — Home</li>
-        <li data-travel="castle"><span class="key">G</span> Castle — Games</li>
-        <li data-travel="studio"><span class="key">T</span> Studio — Team</li>
-        <li data-travel="space"><span class="key">P</span> Station — Posts</li>
-        <li data-travel="temple"><span class="key">C</span> Temple — Contact</li>
-      </ul>
-      <button class="back-btn" id="travel-close">‹ CLOSE</button>
-    </div>
-  </div>
 
   <script src="js/config.js"></script>
   <script src="js/particles.js"></script>
