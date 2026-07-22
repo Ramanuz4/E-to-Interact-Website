@@ -1822,9 +1822,17 @@ body.reduce-motion #welcome-banner.hide{ animation:none; opacity:0; transition:o
   border-bottom:2px dashed rgba(245,239,220,.25); font-size:22px;
 }
 .contact-list li b{ flex:0 0 auto; }
-.contact-list span{
+.contact-list span,
+.contact-list a{
   color:rgba(245,239,220,.65);
   word-break:break-word; overflow-wrap:anywhere; text-align:right;
+}
+.contact-list a{
+  text-decoration:none; transition:color .15s ease;
+}
+.contact-list a:hover,
+.contact-list a:focus-visible{
+  color:var(--accent); text-decoration:underline;
 }
 
 /* ---- posts feed (Space Station) ---- */
