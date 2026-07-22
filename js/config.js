@@ -206,7 +206,7 @@ ETI.CONFIG = {
 
      Animated GIF (easiest — what idle uses now):
        walking: { src: "assets/mascot/walking.gif", gif: true,
-                  dispW: 78, dispH: 128 }        // display size in px
+                  dispW: 84, dispH: 138 }        // display size in px
 
      Horizontal sprite strip ([frame1][frame2]... side by side):
        walking: { src: "assets/mascot/walking.png", frames: 6, fps: 10,
@@ -217,14 +217,17 @@ ETI.CONFIG = {
      they're ready and fill in src.
      ============================================================ */
   ANIMATIONS: {
-    idle:    { src: "assets/mascot/idle.gif", gif: true, dispW: 78, dispH: 128 },
-    walking: { src: null, gif: true, dispW: 78, dispH: 128 },
-    running: { src: null, gif: true, dispW: 78, dispH: 128 },
+    idle:    { src: "assets/mascot/idle.gif", gif: true, dispW: 90, dispH: 138 },
+    walking: { src: null, gif: true, dispW: 90, dispH: 138 },
+    running: { src: null, gif: true, dispW: 90, dispH: 138 },
     // Directional walk art. When Vaugn is moving and facing left, the mascot
     // shows this dedicated left-walk GIF instead of mirroring the idle art.
     // (Its native aspect is ~403x589, so a touch wider than idle at the same
     // 128px height so it isn't squashed.)
-    walkingLeft: { src: "assets/mascot/left.gif", gif: true, dispW: 88, dispH: 128 }
+    walkingLeft: { src: "assets/mascot/left.gif", gif: true, dispW: 95, dispH: 138 },
+    // The final frame of the left-walk, shown as a static hold after the gif
+    // has played through once (so it doesn't loop) while Vaugn keeps moving left.
+    walkingLeftHold: { src: "assets/mascot/left-last.png", gif: false, still: true, dispW: 95, dispH: 138 }
     // Add more states here (e.g. wave, lantern) and call
     // ETI.mascot.setState("wave") from anywhere.
   },

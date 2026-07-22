@@ -473,7 +473,12 @@
       // edge), so add that offset to place the screen-fixed prompt correctly.
       const laneTop = lanePanelTop();
       const screenY = M.pos.y - camY + laneTop;
-      promptEl.style.transform = `translate(calc(-50% + ${Math.round(M.pos.x)}px), ${Math.round(screenY - 46)}px)`;
+      // Vaugn's sprite is ~128px tall and bottom-anchored in his 96px box, so it
+      // extends ~32px above pos.y, and his state label sits above that. Lift the
+      // prompt clear of the whole sprite + label so it never covers him.
+      const clearance = 130;
+      promptEl.style.transform =
+        `translate(calc(-50% + ${Math.round(M.pos.x)}px), ${Math.round(screenY - clearance)}px)`;
     } else if (!_promptHidden) {
       promptEl.classList.add("hidden");
       _promptHidden = true;

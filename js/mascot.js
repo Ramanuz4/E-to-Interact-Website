@@ -47,6 +47,12 @@
   // The left-walk gif keys off this, so it never shows during up/down-only
   // movement or while idle.
   let movingLeft = false;
+  let leftStartT = 0;              // timestamp when the current left-walk began
+  let leftHolding = false;         // true once the gif finished and we hold the still
+  const LEFT_LOOP_MS = 1120;       // left.gif is 12 frames x 100ms = 1200ms;
+                                   // swap to the held frame a touch early so
+                                   // the gif never visibly starts a 2nd loop
+  const now = () => (performance && performance.now ? performance.now() : Date.now());
 
   // world position (px). x is an offset from screen centre.
   const pos = { x: 0, y: 0 };
@@ -63,6 +69,12 @@
     // must NOT be flipped and skips the idle-borrow bob (it animates itself).
     if ((state === "walking" || state === "running") &&
         movingLeft && A.walkingLeft && A.walkingLeft.src) {
+      // Play the looping gif once; after one full loop, hold the final frame
+      // as a static image so it doesn't loop again while he keeps moving left.
+      const elapsed = now() - leftStartT;
+      if (elapsed >= LEFT_LOOP_MS && A.walkingLeftHold && A.walkingLeftHold.src) {
+        return { a: A.walkingLeftHold, fallback: false, mirror: false, directional: true };
+      }
       return { a: A.walkingLeft, fallback: false, mirror: false, directional: true };
     }
 
@@ -188,6 +200,9 @@
 
       // Actual leftward motion this frame (drives the left-walk gif).
       movingLeft = vx < -20;
+      // Note when a fresh left-walk begins, so resolve() can swap the looping
+      // gif for the held final frame once the gif has played through once.
+      if (movingLeft && !prevMovingLeft) leftStartT = now();
 
       // Facing only ever flips to left while ACTIVELY moving left; any other
       // time (moving right, up/down only, or standing still) it returns to the
@@ -204,6 +219,17 @@
     },
 
     tick(dt) {
+      // Left-walk gif -> held final frame: once the gif has played through one
+      // full loop while Vaugn is still moving left, swap to the static hold
+      // image (one-time applyState) so it stops looping.
+      const leftActive = movingLeft && (state === "walking" || state === "running");
+      if (leftActive && !leftHolding && (now() - leftStartT) >= LEFT_LOOP_MS) {
+        leftHolding = true;
+        applyState();
+      } else if (!leftActive && leftHolding) {
+        leftHolding = false;
+      }
+
       // sprite-strip frame advance (GIFs animate on their own)
       if (sheetPlaying && spriteEl._sheet) {
         const a = spriteEl._sheet;
