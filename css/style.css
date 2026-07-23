@@ -164,7 +164,7 @@ body[data-biome="space"] .star{
 #content-panel .cards,
 #content-panel .games-grid{ display:grid; gap:14px; margin-top:14px; }
 #content-panel .games-grid{ grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); }
-#content-panel .cards.team{ grid-template-columns:repeat(auto-fill, minmax(150px,1fr)); }
+#content-panel .cards.team{ grid-template-columns:repeat(auto-fill, minmax(168px,1fr)); }
 #world{
   position:absolute; left:0; top:0; width:100%;
   will-change:transform;
@@ -1767,8 +1767,31 @@ body.reduce-motion #welcome-banner.hide{ animation:none; opacity:0; transition:o
 .panel-hint{ margin-top:18px; font-size:17px; color:rgba(245,239,220,.55); text-align:right; }
 
 .cards{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin:14px 0; }
-.tcard{ border:2px solid rgba(245,239,220,.3); padding:12px; display:flex; flex-direction:column; gap:4px; font-size:20px; }
+.tcard{
+  border:2px solid rgba(245,239,220,.3); padding:14px 12px;
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  font-size:20px; text-align:center;
+}
+.tcard b{ line-height:1.15; }
 .tcard span{ font-size:17px; color:rgba(245,239,220,.6); }
+/* profile photo: a comfortable, consistent square — big enough to read a
+   face, small enough that seven of them stay tidy in the grid */
+.tpic{
+  width:132px; height:132px; object-fit:cover; object-position:50% 40%;
+  border:2px solid rgba(245,239,220,.45);
+  margin-bottom:8px; display:block; background:rgba(255,255,255,.04);
+  /* Photos are NOT pixel art — override the body's global
+     `image-rendering:pixelated`, which was making faces look blocky. */
+  image-rendering:auto;
+  image-rendering:smooth;
+  image-rendering:high-quality;
+  -ms-interpolation-mode:bicubic;
+}
+/* Founder / Co-Founder tag */
+.tcard .trole{
+  font-family:var(--font-display); font-size:9px; letter-spacing:1px;
+  color:var(--accent); margin-top:2px;
+}
 .tface{ width:54px; height:54px; border:3px solid var(--ink); margin-bottom:6px; }
 .f1{ background:#ffd24a; } .f2{ background:#6ee7a8; } .f3{ background:#8fd3f4; } .f4{ background:#e78bb5; }
 

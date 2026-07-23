@@ -314,7 +314,7 @@
     const games = C.GAMES || [];
 
     if (!games.length) {
-      grid.innerHTML = '<p class="fine">No games announced yet. Check back soon.</p>';
+      grid.innerHTML = '<p class="fine">Will be uploaded soon.</p>';
       return;
     }
 
@@ -398,7 +398,7 @@
       const list = active === "all" ? posts : posts.filter(p => p.game === active);
       feed.innerHTML = "";
       if (!list.length) {
-        feed.innerHTML = '<p class="fine">No transmissions for this game yet. Check back soon.</p>';
+        feed.innerHTML = '<p class="fine">Will be uploaded soon.</p>';
         return;
       }
       for (const p of list) {
