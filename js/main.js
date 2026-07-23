@@ -353,6 +353,8 @@
     ETI.dialogue.toast("Tearing open a portal...  →  " + name, 2400);
     if (M.state !== "idle") M.setState("idle");
     M.setSprinting(false);
+    M.setDashing(false);
+    dashTimer = 0;
 
     // 1) a black hole tears open beside Vaugn
     const pIn = spawnPortal(M.pos.y, M.pos.x + PORTAL_DX);
@@ -768,9 +770,12 @@
       if (movingLatched) { if ((speedMag < 4 && !scrollActive) || !actuallyMoved) movingLatched = false; }
       else { if ((speedMag > 10 || scrollActive) && actuallyMoved) movingLatched = true; }
       const moving = movingLatched;
-      // dashing counts as sprinting for the animation/label
+      // dashing counts as sprinting for the animation
       const fast = sprint || (dashing && actuallyMoved);
       M.setSprinting(fast && moving);
+      // ...but the label gets its own "[dash]" text for the burst itself,
+      // and only while he's actually covering ground (not pinned at a limit).
+      M.setDashing(dashing && actuallyMoved && moving);
 
       // Moving = walking; holding Shift (or dashing) while moving = running.
       if (moving) {

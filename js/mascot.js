@@ -26,6 +26,7 @@
   let frameTimer = 0;
   let sheetPlaying = false; // only sprite strips need frame stepping
   let _sprinting = false;
+  let _dashing = false;
   let _scrolling = false;   // true while movement is coming from wheel scroll
   let _tx = null,
     _ty = null; // last-applied transform (skip redundant writes)
@@ -79,15 +80,24 @@
     return { a: own, fallback: false, placeholder: true };
   }
 
+  /** Build the little state caption under Vaugn.
+      A dash outranks everything (it's a brief burst); otherwise the internal
+      "running" state — Shift held, or wheel-scroll movement — reads as
+      "sprinting" to the player. */
+  function labelText() {
+    if (_dashing) return "dash";
+    if (state === "running" || _scrolling) return "sprinting";
+    return state;
+  }
+  function updateLabel() {
+    labelEl.textContent = "[" + labelText() + "]";
+  }
+
   function applyState() {
     const r = resolve();
     const a = r.a;
     spriteEl.dataset.anim = state;
-    // Display label: the internal "running" state (Shift held, and scroll
-    // movement) reads as "sprinting" to the player.
-    let labelState = state;
-    if (state === "running" || _scrolling) labelState = "sprinting";
-    labelEl.textContent = "[" + labelState + "]";
+    updateLabel();
     // The bob motion cue (walk/run) only applies when this state is
     // borrowing idle art — tick() eases its amplitude toward this target
     // every frame rather than snapping it on/off.
@@ -179,9 +189,16 @@
       on = !!on;
       if (on === _scrolling) return;
       _scrolling = on;
-      // refresh the label immediately so it flips walking<->sprinting
-      labelEl.textContent = "[" + ((state === "running" || _scrolling)
-        ? "sprinting" : state) + "]";
+      updateLabel();   // flip walking <-> sprinting straight away
+    },
+
+    /** main.js calls this while a spacebar dash burst is active, so the state
+        label reads "[dash]" for the duration of the dash. */
+    setDashing(on) {
+      on = !!on;
+      if (on === _dashing) return;
+      _dashing = on;
+      updateLabel();
     },
 
     /** Called every frame with the current horizontal/vertical velocity

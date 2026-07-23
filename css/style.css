@@ -108,7 +108,7 @@ body[data-biome="space"] .star{
   bottom:64px;
   z-index:2;
   border:2px solid rgba(245,239,220,.55);
-  background:var(--ui-bg);
+  background:rgba(13,13,20,.8);   /* matches the reload button */
   box-shadow:0 3px 0 rgba(0,0,0,.25);
   overflow:hidden;
 
@@ -1197,7 +1197,7 @@ body[data-time="night"] #vignette{
   display:flex; align-items:center; justify-content:space-between;
   gap:12px;
   padding:10px calc(16px + env(safe-area-inset-right)) 10px calc(16px + env(safe-area-inset-left));
-  background:var(--ui-bg);
+  background:rgba(13,13,20,.8);   /* matches the reload button */
   border-bottom:1px solid rgba(245,239,220,.28);
   z-index:12; pointer-events:auto;
 }
