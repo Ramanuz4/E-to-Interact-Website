@@ -66,88 +66,93 @@ ETI.CONFIG = {
   cycleSeconds: 120,  // one full clock rotation (auto cycle)
   timeTransitionSeconds: 2.8,  // sky/atmosphere ease duration on manual toggle
 
-  /* ---------- WORLD NPCs — ambient storytellers (sparse, one per land) ---------- */
+  /* ---------- WORLD NPCs — the team, scattered across the world ----------
+     Each slot keeps its original zone / x / y / kind so the costume and
+     placement stay exactly as tuned. Only the person and their lines change.
+     People are placed where their real job fits the land they're standing in. */
   NPCS: [
-    /* — Spawn — */
-    { id: "camper", zone: "spawn", x: -195, y: 0.56, name: "Camper", kind: "hiker",
+    /* — Spawn — Devika (Marketing Lead) greets you at the trailhead. */
+    { id: "devika", zone: "spawn", x: -195, y: 0.56, name: "Devika Thapa", kind: "hiker",
       lines: [
-        "First climb? The trail above leads into the Forest.",
-        "That clock in the corner flips the whole world between day and night. Try it.",
-        "I come down here to reset. The campfire never goes out.",
-        "At night the stars come out. Worth stopping to look up."
+        "You made it. I'm Devika — I handle marketing, so meeting people is the job.",
+        "First climb? The trail above leads into the Forest. Our story starts there.",
+        "That clock in the corner flips the whole world between day and night. Go on, try it.",
+        "Everyone reaches the top eventually. The campfire's here when you need a reset."
       ] },
 
-    /* — Forest — */
-    { id: "forager", zone: "forest", x: 210, y: 0.74, name: "Forager", kind: "ranger",
+    /* — Forest (About Us) — Anushka leads design; the origin story is hers to tell. */
+    { id: "anushka", zone: "forest", x: 210, y: 0.74, name: "Anushka Srivastave", kind: "ranger",
       lines: [
-        "Quiet steps — the mushrooms here only glow after dark.",
-        "The Forest sign up ahead tells our story. Worth a read.",
-        "I've walked this treeline a hundred times. Still find something new.",
-        "At night the fireflies come out. If you flip the clock, you'll see them."
+        "Anushka — I lead game design. This forest was the first thing we ever built.",
+        "The sign up ahead tells our story properly. Worth a read.",
+        "Quiet steps — the mushrooms here only glow after dark. That was deliberate.",
+        "Flip the clock and the fireflies come out. Same woods, completely different feeling."
       ] },
-    { id: "scout", zone: "forest", x: -190, y: 0.44, name: "Scout", kind: "scout",
+    { id: "ayush", zone: "forest", x: -190, y: 0.44, name: "Ayush Roy", kind: "scout",
       lines: [
-        "I map these woods in all weathers. Day and night look like different worlds.",
-        "Castle's above the tree line. Just follow the trail.",
-        "See that fallen log? I've used it as a seat for three seasons now."
-      ] },
-
-    /* — Castle — */
-    { id: "guard", zone: "castle", x: -175, y: 0.58, name: "Guard", kind: "guard",
-      lines: [
-        "Halt... oh, it's you. The Games vault is through the gate.",
-        "The banners only look still. Wind off the river keeps them honest.",
-        "Night watch is longer, but the torches make fine company.",
-        "Press G anywhere to jump straight back here."
-      ] },
-    { id: "merchant", zone: "castle", x: 200, y: 0.66, name: "Merchant", kind: "merchant",
-      lines: [
-        "Everything's on display. Nothing's for sale yet.",
-        "Games need time to cook. These are still in the oven.",
-        "Come back after we ship. The vault fills up quick."
+        "Ayush, design side. I walk every path we make to check it actually feels good.",
+        "I mapped these woods in day and in night. They read like two different places.",
+        "Castle's above the tree line. Just follow the trail — you can't really get lost.",
+        "See that fallen log? I left it in on purpose. Empty space needs somewhere to rest."
       ] },
 
-    /* — Studio — */
-    { id: "dev", zone: "studio", x: 175, y: 0.48, name: "Dev", kind: "coder",
+    /* — Castle (Games) — Bhutesh guards the vault; Sahil explains what's still cooking. */
+    { id: "bhutesh", zone: "castle", x: -175, y: 0.58, name: "Bhutesh Mehra", kind: "guard",
       lines: [
-        "Ship day or ship night — we compile either way.",
-        "The arcade cabinet? Yeah, it still boots. Barely.",
-        "Whiteboard's out of date. The code isn't.",
-        "Night shift hits different. The monitors glow brighter when everything else goes dark."
+        "Halt... ah, it's you. Bhutesh — co-founder. I program, and I mind this gate.",
+        "The Games vault is through there. Everything we've built ends up inside.",
+        "Banners only look still. The wind off the river keeps them honest.",
+        "Press G anywhere in the world to come straight back here."
       ] },
-    { id: "designer", zone: "studio", x: -180, y: 0.62, name: "Designer", kind: "scholar",
+    { id: "sahil", zone: "castle", x: 200, y: 0.66, name: "Sahil Kumar Ekka", kind: "merchant",
       lines: [
-        "Every pixel placed on purpose. Mostly.",
-        "The poster up there? I painted it at 2am. Best work I've done.",
+        "Sahil, game design. Everything here is on display — nothing's for sale yet.",
+        "Games need time to cook. Ours are very much still in the oven.",
+        "I'd rather ship one thing that plays well than five that nearly do.",
+        "Come back after we launch. This vault fills up quicker than you'd think."
+      ] },
+
+    /* — Studio (Meet the Team) — Ramanuz at the keyboard, Khushboo at the art wall. */
+    { id: "ramanuz", zone: "studio", x: 175, y: 0.48, name: "Ramanuz Kashyap", kind: "coder",
+      lines: [
+        "Ramanuz — I founded this place, and I still write most of the code.",
+        "Ship day or ship night, we compile either way.",
+        "The whiteboard is out of date. The code isn't. That's the trade.",
+        "Night shift hits different. Monitors glow brighter when everything else goes dark."
+      ] },
+    { id: "khushboo", zone: "studio", x: -180, y: 0.62, name: "Khushboo Khan", kind: "scholar",
+      lines: [
+        "Khushboo, game designer. Every pixel in here was placed on purpose. Mostly.",
+        "That poster on the wall? Painted it at 2am. Still the best thing I've done.",
         "Press T if you want to meet the whole team properly.",
-        "Day mode's great for design. Night mode's great for everything else."
+        "Day mode is great for design work. Night mode is great for everything else."
       ] },
 
-    /* — Space — */
-    { id: "pilot", zone: "space", x: -160, y: 0.54, name: "Pilot", kind: "pilot",
+    /* — Space Station (Posts) — Lucio broadcasts what we're making. */
+    { id: "lucio", zone: "space", x: -160, y: 0.54, name: "Lucio T", kind: "pilot",
       lines: [
+        "Lucio, marketing. If you've seen anything of ours online, it left from this station.",
         "Orbit's quiet. Good place to broadcast what we're building.",
-        "That planet drifts by every few hours. I still wave.",
-        "Console lights blink whether it's day or night up here. Spooky.",
-        "Press P to see everything we've posted so far."
+        "Press P from anywhere to see everything we've posted so far.",
+        "That planet drifts past every few hours. I still wave. Every time."
       ] },
 
-    /* — Temple — */
-    { id: "keeper", zone: "temple", x: 140, y: 0.62, name: "Keeper", kind: "mystic",
+    /* — Sky Temple (Contact) — Saugata handles sound; the temple hums. */
+    { id: "saugata", zone: "temple", x: 140, y: 0.62, name: "Saugata Deb", kind: "mystic",
       lines: [
-        "Few make the whole climb. You did.",
-        "The floating isles below? They're not decoration. They're old foundations.",
-        "At night the orbs hum louder. Listen when the clock turns.",
-        "The contact sign is just ahead. We actually read everything."
+        "Few make the whole climb. You did. I'm Saugata — sound and SFX.",
+        "Stand still a moment. This place has a hum. I tuned it that way.",
+        "At night the orbs ring louder. Listen right after the clock turns.",
+        "The contact sign is just ahead. Send us something — we actually read all of it."
       ] },
 
-    /* — Crossings — */
-    { id: "angler", zone: "bridge", x: 165, y: 0.42, name: "Angler", kind: "angler",
+    /* — Bridge crossing — Ashmeet edits; a river is a good place to wait for the cut. */
+    { id: "ashmeet", zone: "bridge", x: 165, y: 0.42, name: "Ashmeet Singh", kind: "angler",
       lines: [
-        "Mist off the river. Fish don't mind.",
-        "Lamps on the bridge stay lit when the clock says night.",
-        "Castle's just past here. Mind the planks — they're older than they look.",
-        "On a clear night you can see the stars reflected in the water."
+        "Ashmeet — I cut the videos. Editing is mostly waiting for the right moment, like this.",
+        "Mist off the river, lamps on the planks. That's a shot, whether I film it or not.",
+        "Castle's just past here. Mind your step — those boards are older than they look.",
+        "On a clear night the stars land in the water. I've never got that on camera properly."
       ] }
   ],
 
