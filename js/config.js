@@ -112,20 +112,13 @@ ETI.CONFIG = {
         "Come back after we launch. This vault fills up quicker than you'd think."
       ] },
 
-    /* — Studio (Meet the Team) — Ramanuz at the keyboard, Khushboo at the art wall. */
+    /* — Studio (Meet the Team) — Ramanuz at the keyboard. */
     { id: "ramanuz", zone: "studio", x: 175, y: 0.48, name: "Ramanuz Kashyap", kind: "coder",
       lines: [
         "Ramanuz — I founded this place, and I still write most of the code.",
         "Ship day or ship night, we compile either way.",
         "The whiteboard is out of date. The code isn't. That's the trade.",
         "Night shift hits different. Monitors glow brighter when everything else goes dark."
-      ] },
-    { id: "khushboo", zone: "studio", x: -180, y: 0.62, name: "Khushboo Khan", kind: "scholar",
-      lines: [
-        "Khushboo, game designer. Every pixel in here was placed on purpose. Mostly.",
-        "That poster on the wall? Painted it at 2am. Still the best thing I've done.",
-        "Press T if you want to meet the whole team properly.",
-        "Day mode is great for design work. Night mode is great for everything else."
       ] },
 
     /* — Space Station (Posts) — Lucio broadcasts what we're making. */
