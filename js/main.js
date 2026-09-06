@@ -588,6 +588,22 @@
     keys.delete(k === "shift" ? "shift" : k);
   });
 
+  // If the window loses focus (alt-tab, click away, switch apps) while a
+  // movement key is held, its keyup fires on the *other* window, not this
+  // one — so the key would stay "stuck" in `keys` and Vaugn would keep
+  // walking on return until it's tapped again. Clear all held keys on blur
+  // (and on tab-hide) so focus loss always leaves him at a clean stop.
+  function releaseAllKeys() {
+    if (keys.size === 0) return;
+    keys.clear();
+    scrollAccum = 0;
+    scrollActive = false;
+  }
+  window.addEventListener("blur", releaseAllKeys);
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) releaseAllKeys();
+  });
+
   /* ---- scroll routing: content panel vs world ----
      Where the wheel goes depends on where the cursor is:
        • Over the right-hand content panel: scroll THAT panel. Only once it's
