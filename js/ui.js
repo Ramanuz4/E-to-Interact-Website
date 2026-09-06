@@ -217,11 +217,6 @@
   function selectMain() {
     const item = listItems()[sel].dataset.item;
     if (item === "resume") { closePause(); return; }
-    if (item === "tutorial") {
-      closePause();
-      if (ETI.replayOnboarding) ETI.replayOnboarding();
-      return;
-    }
     settingsSel = 0;
     openPane(item);
   }

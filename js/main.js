@@ -12,7 +12,6 @@
   const M = ETI.mascot;
   const worldEl = document.getElementById("world");
   const bootEl = document.getElementById("boot");
-  const onboardEl = document.getElementById("onboard");
   const promptEl = document.getElementById("prompt");
   const promptLabel = document.getElementById("prompt-label");
   const darknessEl = document.getElementById("darkness");
@@ -24,7 +23,7 @@
   ETI.world.build();
 
   /* ---------- state ---------- */
-  let mode = "boot"; // boot | onboard | intro | play | portal
+  let mode = "boot"; // boot | intro | play | portal
   let introSkip = null;
   const keys = new Set();
   let camY = 0;
@@ -145,115 +144,16 @@
   }
 
   /* ============================================================
-     BOOT → ONBOARDING → INTRO
+     BOOT → INTRO
      ============================================================ */
 
-  // ---- onboarding controller (multi-page, skippable, replayable) ----
-  const ONBOARD_KEY = "eti_onboarded_v1";
-  const onboard = (function () {
-    let pages = [];
-    let idx = 0;
-    let onFinish = null;
-    let returnToPause = false;   // true when opened from the menu
-    const badgeEl = document.getElementById("ob-badge");
-    const dotsWrap = document.getElementById("ob-dots");
-    const backBtn = document.getElementById("ob-back");
-    const nextBtn = document.getElementById("ob-next");
-    const skipBtn = document.getElementById("ob-skip");
-
-    function visiblePageSet() {
-      // whichever .ob-pages block isn't display:none for this device
-      const sets = [...onboardEl.querySelectorAll(".ob-pages")];
-      const active = sets.find(s => getComputedStyle(s).display !== "none") || sets[0];
-      return [...active.querySelectorAll(".ob-page")];
-    }
-
-    function renderDots() {
-      dotsWrap.innerHTML = "";
-      pages.forEach((_, i) => {
-        const dot = document.createElement("div");
-        dot.className = "dot" + (i === idx ? " on" : "");
-        dot.addEventListener("click", () => show(i));
-        dotsWrap.appendChild(dot);
-      });
-    }
-
-    function show(i) {
-      idx = Math.max(0, Math.min(pages.length - 1, i));
-      pages.forEach((p, n) => p.classList.toggle("on", n === idx));
-      [...dotsWrap.children].forEach((dot, n) => dot.classList.toggle("on", n === idx));
-      if (badgeEl && pages[idx].dataset.badge) badgeEl.innerHTML = pages[idx].dataset.badge;
-      backBtn.disabled = idx === 0;
-      nextBtn.textContent = idx === pages.length - 1 ? "Finish ›" : "Next ›";
-    }
-
-    function finish() {
-      onboardEl.classList.add("out");
-      setTimeout(() => { onboardEl.classList.add("hidden"); onboardEl.classList.remove("out"); }, 420);
-      const cb = onFinish; onFinish = null;
-      if (returnToPause) {
-        returnToPause = false;
-        mode = "play";
-        ETI.ui.openPause();
-      } else {
-        // Remember first-run onboarding was completed/skipped so it doesn't
-        // reappear on every visit. Replaying from the pause menu (returnToPause)
-        // deliberately doesn't touch this flag.
-        try { localStorage.setItem(ONBOARD_KEY, "1"); } catch (e) {}
-        if (cb) cb();
-      }
-    }
-
-    backBtn.addEventListener("click", () => show(idx - 1));
-    nextBtn.addEventListener("click", () => { idx === pages.length - 1 ? finish() : show(idx + 1); });
-    skipBtn.addEventListener("click", finish);
-
-    return {
-      // run as part of the first-load flow (boot → onboard → intro)
-      run(done) {
-        returnToPause = false;
-        onFinish = done;
-        pages = visiblePageSet();
-        onboardEl.classList.remove("hidden");
-        renderDots();
-        show(0);
-      },
-      // reopen later from the pause menu
-      replay() {
-        returnToPause = true;
-        onFinish = null;
-        mode = "onboard";
-        pages = visiblePageSet();
-        onboardEl.classList.remove("hidden");
-        renderDots();
-        show(0);
-      },
-      key(k) {
-        if (mode !== "onboard") return false;
-        if (k === "escape") { finish(); return true; }
-        if (k === "arrowright" || k === "d" || k === "e" || k === "enter") {
-          idx === pages.length - 1 ? finish() : show(idx + 1);
-          return true;
-        }
-        if (k === "arrowleft" || k === "a") { show(idx - 1); return true; }
-        return true; // swallow other keys while onboarding
-      },
-      get isOpen() { return mode === "onboard"; }
-    };
-  })();
-  // expose replay so the pause menu can reopen the guide
-  ETI.replayOnboarding = onboard.replay;
-
-  // Boot → show onboarding every visit, then run the intro.
+  // Boot → straight into the intro and the world. (The onboarding tutorial
+  // that used to sit between boot and intro has been removed entirely.)
   function startFromBoot() {
     if (mode !== "boot") return;
     bootEl.classList.add("out");
     setTimeout(() => bootEl.remove(), 1100);
-
-    // Play the tutorial (onboarding) at the start of every visit, then flow
-    // into the intro and the world — exactly as it did originally.
-    mode = "onboard";
-    onboard.run(startIntro);
+    startIntro();
   }
 
   function startIntro() {
@@ -535,9 +435,9 @@
      INPUT
      ============================================================ */
   const handled = new Set(["w", "a", "s", "d", "e", "c", "g", "h", "t", "p", " ", "escape", "enter", "shift"]);
-  // Onboarding tells players "arrow keys work too" — normalize them to
-  // their WASD equivalents right here so movement, menus and the secret
-  // code all treat them identically, with no special-casing downstream.
+  // Arrow keys work as movement too — normalize them to their WASD
+  // equivalents right here so movement, menus and the secret code all treat
+  // them identically, with no special-casing downstream.
   const arrowToWASD = { arrowup: "w", arrowdown: "s", arrowleft: "a", arrowright: "d" };
 
   window.addEventListener("keydown", (ev) => {
@@ -545,7 +445,6 @@
     if (handled.has(k)) ev.preventDefault();
 
     if (mode === "boot") { if (k === "e") startFromBoot(); return; }
-    if (mode === "onboard") { onboard.key(k); return; }
     // during the walk-in (before dialogue), any key jumps straight to dialogue
     if (mode === "intro" && !ETI.dialogue.isBlocking) { if (introSkip) introSkip(); return; }
     if (ev.repeat) { if ("wasd".includes(k) && k.length === 1) keys.add(k); return; }
@@ -658,7 +557,6 @@
   /** Central "E was pressed" behaviour shared by key and button. */
   function actionE() {
     if (mode === "boot") { startFromBoot(); return; }
-    if (mode === "onboard") { onboard.key("e"); return; }
     if (ETI.dialogue.isBlocking) { ETI.dialogue.advance(); return; }
     if (ETI.ui.panelOpen) { ETI.ui.closePanel(); return; }
     if (ETI.ui.pauseOpen || ETI.ui.devOpen) return; // menu items are tappable
@@ -668,7 +566,6 @@
   /** Central "Esc was pressed" behaviour shared by key and button. */
   function actionEsc() {
     if (mode === "boot" || mode === "portal") return;
-    if (mode === "onboard") { onboard.key("escape"); return; }
     if (ETI.ui.devOpen) { ETI.ui.devKey("escape"); return; }
     if (ETI.ui.pauseOpen) { ETI.ui.pauseKey("escape"); return; }
     if (ETI.ui.panelOpen) { ETI.ui.closePanel(); return; }
