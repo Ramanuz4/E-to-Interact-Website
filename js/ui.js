@@ -273,15 +273,23 @@
   const panelEl = document.getElementById("panel");
   let panelOpen = false;
 
-  ETI.openPanel = function (section) {
-    document.getElementById("panel-biome").textContent = section.title.toUpperCase();
-    document.getElementById("panel-title").textContent = section.sub;
-    const body = document.getElementById("panel-body");
+  /** Clone a section's <template> content into `body` and run its matching
+      sub-renderer (games grid / posts feed) if present. Shared by the modal
+      panel, the desktop content-panel, and the mobile stepper (mobile.js) —
+      all three show the same section content from the same templates. */
+  function renderSectionInto(body, section) {
     body.innerHTML = "";
     const tpl = document.getElementById(section.content);
     if (tpl) body.appendChild(tpl.content.cloneNode(true));
     if (body.querySelector("#games-grid")) renderGames(body);
     if (body.querySelector("#posts-tabs")) renderPostsSection(body);
+  }
+  ETI.renderSectionInto = renderSectionInto;
+
+  ETI.openPanel = function (section) {
+    document.getElementById("panel-biome").textContent = section.title.toUpperCase();
+    document.getElementById("panel-title").textContent = section.sub;
+    renderSectionInto(document.getElementById("panel-body"), section);
     panelEl.classList.remove("hidden");
     panelOpen = true;
   };
@@ -300,11 +308,7 @@
     if (!body) return;
     biomeEl.textContent = (section.title || "").toUpperCase();
     titleEl.textContent = section.sub || section.title || "";
-    body.innerHTML = "";
-    const tpl = document.getElementById(section.content);
-    if (tpl) body.appendChild(tpl.content.cloneNode(true));
-    if (body.querySelector("#games-grid")) renderGames(body);
-    if (body.querySelector("#posts-tabs")) renderPostsSection(body);
+    renderSectionInto(body, section);
   };
 
   /* ---------- GAMES — grid of cards, each opening its own detail page ---------- */

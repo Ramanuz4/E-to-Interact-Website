@@ -3,6 +3,11 @@
    Boot → intro → play. Input, camera, travel, crossings, secret.
    ============================================================ */
 (function () {
+  // Phones / small screens get their own stepper UI (js/mobile.js) instead
+  // of this free-roam game — see ETI.isMobileLayout, set once in index.html.
+  // Bail out before touching the world, input, or the render loop.
+  if (ETI.isMobileLayout) return;
+
   const C = ETI.CONFIG;
   const M = ETI.mascot;
   const worldEl = document.getElementById("world");

@@ -16,15 +16,67 @@
 </head>
 <body data-biome="spawn" data-time="day">
 
-  <!-- ============ SMALL-SCREEN NOTICE (phones / narrow screens) ============ -->
-  <div id="screen-gate" aria-hidden="true">
-    <div class="gate-box">
-      <div class="gate-logo">
+  <!-- ============ MOBILE / SMALL-SCREEN FLAG ============
+       Computed once at load. main.js reads this to skip building the
+       free-roam desktop game entirely; mobile.js reads it to run its
+       stepper UI instead. Kept as a tiny inline script (before any other
+       script) so both later files can rely on it being set. -->
+  <script>
+    window.ETI = window.ETI || {};
+    ETI.isMobileLayout = window.matchMedia("(max-width:1023px), (max-height:420px)").matches;
+  </script>
+
+  <!-- ============ MOBILE APP (phones / small screens) ============
+       A separate, generic UI: no free-roam walking or scrolling. Vaugn
+       briefs each section as you step to it with the ▲ / ▼ controls, and
+       that section's own content scrolls independently underneath. The
+       navbar lives inside the hamburger menu. Shown only below the
+       breakpoint in css/style.css; hidden entirely on desktop. -->
+  <div id="mobile-app" aria-hidden="true">
+    <header id="mob-topbar">
+      <a id="mob-logo" href="#" aria-label="E to Interact — home">
         <img src="assets/brand/logo.png" alt="E to Interact" />
+      </a>
+      <button id="mob-hamburger" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </header>
+
+    <div id="mob-nav-scrim"></div>
+    <nav id="mob-navdrawer" aria-label="Site navigation">
+      <button class="mob-nav-btn" data-shortcut="spawn">
+        <span>Home</span><span class="mob-nav-key">H</span>
+      </button>
+      <button class="mob-nav-btn" data-shortcut="castle">
+        <span>Games</span><span class="mob-nav-key">G</span>
+      </button>
+      <button class="mob-nav-btn" data-shortcut="studio">
+        <span>Team</span><span class="mob-nav-key">T</span>
+      </button>
+      <button class="mob-nav-btn" data-shortcut="space">
+        <span>Posts</span><span class="mob-nav-key">P</span>
+      </button>
+      <button class="mob-nav-btn" data-shortcut="temple">
+        <span>Contact</span><span class="mob-nav-key">C</span>
+      </button>
+    </nav>
+
+    <div id="mob-stage">
+      <div id="mob-brief" aria-live="polite">
+        <div id="mob-vaugn" aria-hidden="true"></div>
+        <p id="mob-brief-text"></p>
       </div>
-      <h1 class="gate-title">Best explored on a bigger screen</h1>
-      <p class="gate-msg">E&nbsp;to&nbsp;Interact is a walkable world that needs room to roam. Phones and small screens aren't supported yet.</p>
-      <p class="gate-sub">Please visit on a <b>laptop</b>, <b>desktop / PC</b>, or a <b>tablet in landscape</b>.</p>
+      <div id="mob-section">
+        <div class="mob-tag" id="mob-biome">SPAWN</div>
+        <h2 class="mob-title" id="mob-title">Welcome</h2>
+        <div class="mob-body" id="mob-body"></div>
+      </div>
+    </div>
+
+    <div id="mob-navcontrols">
+      <button id="mob-up" aria-label="Previous section">▲</button>
+      <div id="mob-dots" aria-hidden="true"></div>
+      <button id="mob-down" aria-label="Next section">▼</button>
     </div>
   </div>
 
@@ -467,6 +519,7 @@
   <script src="js/mascot.js"></script>
   <script src="js/world.js"></script>
   <script src="js/ui.js"></script>
+  <script src="js/mobile.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

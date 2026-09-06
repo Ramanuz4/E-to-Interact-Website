@@ -1439,65 +1439,169 @@ body[data-time="night"] #vignette{
   to{ opacity:0; transform:translate(-50%, -14px); }
 }
 /* ============================================================
-   NAVBAR — small screens: collapse links into a hamburger drawer
-   (inspired by a slide-down full-width menu panel)
+   MOBILE APP — phones & small screens
+   A separate, generic UI: no free-roam walking, and the page itself
+   never scrolls (body already sets overflow:hidden above). Instead a
+   six-stop stepper — Spawn, About, Games, Team, Posts, Contact —
+   advances with the ▲ / ▼ controls; Vaugn (reusing his idle art)
+   briefs each stop in the same dialogue box the desktop game uses,
+   and that stop's own content scrolls independently in #mob-body.
+   The navbar lives inside the hamburger menu. Hidden entirely on
+   desktop; shown only under the breakpoint below.
    ============================================================ */
-/* ============================================================
-   SMALL-SCREEN GATE
-   The world is desktop/laptop/tablet-landscape only. Below the width
-   threshold we hide the experience and show a full-screen notice.
-   ============================================================ */
-#screen-gate{ display:none; }
-
-@media (max-width:1023px){
-  /* hide the whole experience... */
-  body > *:not(#screen-gate){ display:none !important; }
-  /* ...and show the notice full-screen */
-  #screen-gate{
-    display:flex; position:fixed; inset:0; z-index:9999;
-    align-items:center; justify-content:center;
-    padding:28px;
-    background:
-      radial-gradient(circle at 50% 30%, rgba(255,210,74,.10), transparent 60%),
-      linear-gradient(#0a0a12, #05050c);
-    color:var(--paper); text-align:center;
-  }
-  #screen-gate .gate-box{
-    max-width:440px;
-    border:3px solid var(--ui-border);
-    background:var(--ui-bg);
-    box-shadow:0 10px 0 rgba(0,0,0,.5), 0 0 40px rgba(255,210,74,.12);
-    padding:30px 26px 34px;
-  }
-  #screen-gate .gate-logo img{ height:66px; width:auto; image-rendering:auto; margin-bottom:18px; }
-  #screen-gate .gate-title{
-    font-family:var(--font-display); font-size:15px; line-height:1.5;
-    color:var(--accent); margin-bottom:16px; letter-spacing:1px;
-  }
-  #screen-gate .gate-msg{
-    font-family:var(--font-body); font-size:20px; line-height:1.4;
-    margin-bottom:14px;
-  }
-  #screen-gate .gate-sub{
-    font-family:var(--font-body); font-size:18px; line-height:1.4;
-    color:rgba(245,239,220,.75);
-  }
-  #screen-gate .gate-sub b{ color:var(--paper); }
+#mobile-app{
+  display:none;
+  position:fixed; inset:0; z-index:30;
+  flex-direction:column;
+  background:
+    linear-gradient(rgba(6,7,13,.6), rgba(6,7,13,.88)),
+    linear-gradient(#5fb2d4, #b9dfe9 55%, #9fd4ac);
 }
-/* very short landscape phones still count as "small" even if wide enough,
-   so also gate when there isn't enough height to render the panels */
-@media (max-height:420px){
-  body > *:not(#screen-gate){ display:none !important; }
-  #screen-gate{
-    display:flex; position:fixed; inset:0; z-index:9999;
-    align-items:center; justify-content:center; padding:20px;
-    background:linear-gradient(#0a0a12, #05050c); color:var(--paper); text-align:center;
-  }
-  #screen-gate .gate-box{ max-width:440px; border:3px solid var(--ui-border); background:var(--ui-bg); padding:20px; }
-  #screen-gate .gate-logo img{ height:44px; width:auto; margin-bottom:10px; }
-  #screen-gate .gate-title{ font-family:var(--font-display); font-size:12px; color:var(--accent); margin-bottom:10px; }
-  #screen-gate .gate-msg{ font-family:var(--font-body); font-size:17px; margin-bottom:8px; }
-  #screen-gate .gate-sub{ font-family:var(--font-body); font-size:15px; color:rgba(245,239,220,.75); }
+
+#mob-topbar{
+  flex:0 0 auto; position:relative; z-index:31;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:calc(10px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 10px calc(16px + env(safe-area-inset-left));
+  background:rgba(13,13,20,.85);
+  border-bottom:1px solid rgba(245,239,220,.28);
+}
+#mob-logo{ display:flex; align-items:center; height:38px; text-decoration:none; }
+#mob-logo img{ height:100%; width:auto; image-rendering:auto; display:block; }
+#mob-hamburger{
+  width:42px; height:36px; padding:0;
+  background:rgba(255,255,255,.03); border:2px solid rgba(245,239,220,.35);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;
+  cursor:pointer;
+}
+#mob-hamburger span{
+  width:20px; height:2px; background:var(--paper);
+  transition:transform .2s ease, opacity .2s ease;
+}
+#mob-hamburger.is-open span:nth-child(1){ transform:translateY(7px) rotate(45deg); }
+#mob-hamburger.is-open span:nth-child(2){ opacity:0; }
+#mob-hamburger.is-open span:nth-child(3){ transform:translateY(-7px) rotate(-45deg); }
+
+/* ---- hamburger drawer: slides down full-width from under the topbar ---- */
+#mob-nav-scrim{
+  position:fixed; inset:0; z-index:40;
+  background:rgba(0,0,0,.5);
+  opacity:0; pointer-events:none;
+  transition:opacity .25s ease;
+}
+#mob-nav-scrim.show{ opacity:1; pointer-events:auto; }
+#mob-navdrawer{
+  position:fixed; left:0; right:0; top:0; z-index:50;
+  display:flex; flex-direction:column;
+  padding-top:calc(58px + env(safe-area-inset-top));
+  background:rgba(10,10,18,.98);
+  border-bottom:2px solid var(--ui-border);
+  box-shadow:0 14px 26px rgba(0,0,0,.45);
+  transform:translateY(-100%);
+  transition:transform .28s ease;
+}
+#mob-navdrawer.open{ transform:translateY(0); }
+.mob-nav-btn{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:16px calc(20px + env(safe-area-inset-right)) 16px calc(20px + env(safe-area-inset-left));
+  background:transparent; border:none; border-bottom:1px solid rgba(245,239,220,.15);
+  color:var(--paper); font-family:var(--font-display); font-size:13px; letter-spacing:1px;
+  text-align:left; cursor:pointer;
+}
+.mob-nav-btn:active{ background:rgba(255,255,255,.07); }
+.mob-nav-btn.current{ color:var(--accent); }
+.mob-nav-key{ font-size:10px; opacity:.5; letter-spacing:2px; }
+
+/* ---- Vaugn's brief — appears in-flow above the section card each time
+   you step to a new stop; his line rides along right beside him instead of
+   fighting for space with the bottom nav bar. ---- */
+#mob-brief{
+  flex:0 0 auto;
+  display:flex; align-items:center; gap:12px;
+  max-height:0; opacity:0; overflow:hidden;
+  margin:0; padding:0 2px;
+  transition:max-height .3s ease, opacity .3s ease, margin .3s ease;
+}
+#mob-brief.show{ max-height:160px; opacity:1; margin-bottom:12px; }
+#mob-vaugn{
+  flex:0 0 auto; width:52px; height:76px;
+  background:url('../assets/mascot/idle.gif') no-repeat center / contain;
+  image-rendering:auto;
+}
+#mob-brief-text{
+  flex:1 1 auto; min-width:0;
+  background:var(--ui-bg); border:2px solid var(--ui-border);
+  box-shadow:0 4px 0 rgba(0,0,0,.35);
+  padding:10px 14px;
+  font-family:var(--font-body); font-size:18px; line-height:1.35; color:var(--paper);
+}
+
+/* ---- stage: the current section, title + scrollable body ---- */
+#mob-stage{
+  flex:1 1 auto; min-height:0;
+  display:flex; flex-direction:column;
+  padding:16px calc(14px + env(safe-area-inset-right)) 12px calc(14px + env(safe-area-inset-left));
+  overflow:hidden;
+}
+#mob-section{
+  flex:1 1 auto; min-height:0;
+  display:flex; flex-direction:column;
+  border:2px solid rgba(245,239,220,.35);
+  background:rgba(13,13,20,.82);
+  box-shadow:0 6px 0 rgba(0,0,0,.35);
+}
+.mob-tag{
+  flex:0 0 auto;
+  font-family:var(--font-display); font-size:11px; letter-spacing:2px;
+  color:var(--accent); padding:16px 18px 0;
+}
+.mob-title{
+  flex:0 0 auto;
+  font-family:var(--font-display); font-size:clamp(15px,4.6vw,20px); font-weight:normal;
+  line-height:1.35;
+  color:var(--paper); padding:8px 18px 14px; margin:0 0 4px;
+  border-bottom:2px dashed rgba(245,239,220,.18);
+}
+#mob-body{
+  flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+  padding:14px 18px 26px;
+  font-family:var(--font-body); font-size:20px; line-height:1.5; color:var(--paper);
+}
+#mob-body p{ margin:10px 0; }
+#mob-body .fine{ font-size:16px; color:rgba(245,239,220,.6); }
+#mob-body .about-logo{ width:min(220px, 60%); }
+
+/* ---- bottom nav controls: ▲ / ▼ stepper + progress dots ---- */
+#mob-navcontrols{
+  flex:0 0 auto; position:relative; z-index:25;
+  display:flex; align-items:center; justify-content:center; gap:24px;
+  padding:12px calc(16px + env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+  background:rgba(13,13,20,.85); border-top:1px solid rgba(245,239,220,.28);
+}
+#mob-up, #mob-down{
+  width:52px; height:52px; padding:0; border-radius:50%;
+  background:rgba(255,255,255,.04); border:2px solid rgba(245,239,220,.4);
+  color:var(--paper); font-size:19px; line-height:1; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:border-color .15s ease, background .15s ease, color .15s ease, opacity .15s ease;
+}
+#mob-up:active, #mob-down:active{ background:var(--accent); color:var(--ink); border-color:var(--accent); }
+#mob-up:disabled, #mob-down:disabled{ opacity:.3; }
+#mob-up:disabled:active, #mob-down:disabled:active{
+  background:rgba(255,255,255,.04); color:var(--paper); border-color:rgba(245,239,220,.4);
+}
+#mob-dots{ display:flex; gap:7px; }
+.mob-dot{
+  width:8px; height:8px; border-radius:50%;
+  background:rgba(245,239,220,.25);
+  transition:background .15s ease, transform .15s ease;
+}
+.mob-dot.on{ background:var(--accent); transform:scale(1.3); }
+
+@media (max-width:1023px), (max-height:420px){
+  #mobile-app{ display:flex; }
+  /* everything else (the desktop game + its HUD) hides */
+  body > *:not(#mobile-app){ display:none !important; }
 }
 
 body.reduce-motion #welcome-banner{ animation:none; opacity:1; }
