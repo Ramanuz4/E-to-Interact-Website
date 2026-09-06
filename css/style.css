@@ -1581,10 +1581,24 @@ body[data-time="night"] #vignette{
 #mob-up, #mob-down{
   width:52px; height:52px; padding:0; border-radius:50%;
   background:rgba(255,255,255,.04); border:2px solid rgba(245,239,220,.4);
-  color:var(--paper); font-size:19px; line-height:1; cursor:pointer;
+  color:var(--paper); font-size:0; line-height:0; cursor:pointer;
   display:flex; align-items:center; justify-content:center;
   transition:border-color .15s ease, background .15s ease, color .15s ease, opacity .15s ease;
 }
+/* Arrows are drawn as CSS border-triangles rather than the ▲ / ▼ font
+   glyphs: those glyphs have asymmetric internal metrics (the up-triangle
+   in particular sits high and left inside its em box, looking off-centre).
+   A bordered triangle is geometrically exact, so both arrows sit dead
+   centre and mirror each other perfectly. currentColor makes them follow
+   the button's text colour (including the :active gold flip). */
+#mob-up::before, #mob-down::before{
+  content:""; display:block;
+  width:0; height:0;
+  border-left:9px solid transparent;
+  border-right:9px solid transparent;
+}
+#mob-up::before{ border-bottom:12px solid currentColor; }
+#mob-down::before{ border-top:12px solid currentColor; }
 #mob-up:active, #mob-down:active{ background:var(--accent); color:var(--ink); border-color:var(--accent); }
 #mob-up:disabled, #mob-down:disabled{ opacity:.3; }
 #mob-up:disabled:active, #mob-down:disabled:active{
