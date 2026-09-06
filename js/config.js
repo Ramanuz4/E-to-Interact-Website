@@ -152,30 +152,19 @@ ETI.CONFIG = {
   /* ============================================================
      VAUGN'S ANIMATIONS
      ------------------------------------------------------------
-     Three states: idle, walking (when moving), running (moving + Shift).
-     Two formats are supported per state:
+     Vaugn uses a single animation: the idle GIF. It's symmetric, so it
+     reads correctly whether he's standing still or moving in any
+     direction. The walking/running motion (a gentle bob) is generated
+     in code on top of this same idle art — there are no separate
+     walk/run image files.
 
-     Animated GIF (easiest — what idle uses now):
-       walking: { src: "assets/mascot/walking.gif", gif: true,
-                  dispW: 84, dispH: 138 }        // display size in px
-
-     Horizontal sprite strip ([frame1][frame2]... side by side):
-       walking: { src: "assets/mascot/walking.png", frames: 6, fps: 10,
-                  frameW: 64, frameH: 96 }
-
-     A state without a src falls back to the idle GIF (with a little
-     rocking motion) — so drop in walking.gif / running.gif whenever
-     they're ready and fill in src.
+     If you ever add a dedicated animation later, drop the file in
+     assets/mascot/ and add an entry here, e.g.:
+       walking: { src: "assets/mascot/walking.gif", gif: true, dispW: 99, dispH: 145 }
+     then it will be used automatically for that state.
      ============================================================ */
   ANIMATIONS: {
-    idle:    { src: "assets/mascot/idle.gif", gif: true, dispW: 99, dispH: 145 },
-    walking: { src: null, gif: true, dispW: 99, dispH: 145 },
-    running: { src: null, gif: true, dispW: 99, dispH: 145 }
-    // Left-walk art is disabled for now — every state uses the idle art.
-    // (assets/mascot/left.gif and left-last.png are still in the project if
-    //  you want to switch it back on later.)
-    // Add more states here (e.g. wave, lantern) and call
-    // ETI.mascot.setState("wave") from anywhere.
+    idle: { src: "assets/mascot/idle.gif", gif: true, dispW: 99, dispH: 145 }
   },
 
   /* ============================================================
