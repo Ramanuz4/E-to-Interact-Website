@@ -13,32 +13,64 @@ ETI.CONFIG = {
   /* ============================================================
      POSTS — the Space Station feed
      ------------------------------------------------------------
-     Add new posts at the TOP of this array. Three types:
+     Add new posts at the TOP of this array. Four post types:
 
      Video (YouTube):
-       { type: "video", date: "2026-07-01", title: "Gameplay reveal",
+       { type: "video", tab: "videos", date: "2026-07-01", title: "Gameplay reveal",
          youtube: "dQw4w9WgXcQ",            // just the video ID
-         game: "lantern",                    // id from GAMES below (optional)
+         text: "Optional caption." }
+
+     Reel (self-hosted vertical video):
+       { type: "reel", tab: "reels", date: "2026-07-05", title: "Teaser",
+         src: "assets/reels/teaser.mp4",     // drop the .mp4 in assets/reels/
+         poster: "assets/reels/teaser.jpg",  // optional thumbnail
          text: "Optional caption." }
 
      Image:
-       { type: "image", date: "2026-06-20", title: "New key art",
-         src: "assets/posts/keyart.png",     // drop files in assets/posts/
-         game: "skybound",
+       { type: "image", tab: "posts", date: "2026-06-20", title: "New key art",
+         src: "assets/posts/keyart.png",     // drop images in assets/posts/
          text: "Optional caption." }
 
      Text / announcement:
-       { type: "text", date: "2026-06-01", title: "Devlog #1",
-         game: "lantern",
+       { type: "text", tab: "posts", date: "2026-06-01", title: "Devlog #1",
          text: "Anything you want to say." }
 
-     `game` should match an id from GAMES below so the post shows up
-     under that game's tab in the Posts section. Leave it out (or set
-     it to null) for general studio news — those posts only appear
-     under the "All" tab.
+     Media lives in three folders that mirror the tabs:
+       assets/posts/   — images for Posts
+       assets/reels/   — .mp4 clips for Reels
+       assets/videos/  — files for Videos (YouTube posts need no file)
+
+     The feed has three fixed tabs: Posts, Reels, Videos. A post's `tab`
+     field ("posts" | "reels" | "videos") decides which tab it appears
+     under. If you leave `tab` out: reels fall under Reels, videos under
+     Videos, and everything else under Posts.
      ============================================================ */
   POSTS: [
-    // No posts yet — the Posts section shows "Will be uploaded soon."
+    { type: "reel", tab: "reels", date: "2026-09-06", title: "Meet VAUGN \ud83c\udf00",
+      src: "assets/reels/meet-vaugn-reel.mp4",
+      text:
+        "She took her time, but she\u2019s finally here \ud83c\udf00<br><br>" +
+        "Follow us everywhere:<br>" +
+        "Founder\u2019s Instagram: <a href=\"https://www.instagram.com/_ramanuz_/\" target=\"_blank\" rel=\"noopener\">@_ramanuz_</a><br>" +
+        "Twitter/X: <a href=\"https://twitter.com/etogamestudio\" target=\"_blank\" rel=\"noopener\">etogamestudio</a><br>" +
+        "Discord: <a href=\"https://discord.gg/BjpDTVCkFB\" target=\"_blank\" rel=\"noopener\">discord.gg/BjpDTVCkFB</a>" },
+    { type: "image", tab: "posts", date: "2026-09-06", title: "Meet VAUGN \ud83c\udf1f",
+      src: "assets/posts/meet-vaugn.png",
+      text:
+        "She\u2019s small, she\u2019s spooky, and she brags about our video games.<br><br>" +
+        "Follow us everywhere:<br>" +
+        "Founder\u2019s Instagram: <a href=\"https://www.instagram.com/_ramanuz_/\" target=\"_blank\" rel=\"noopener\">@_ramanuz_</a><br>" +
+        "Twitter/X: <a href=\"https://twitter.com/etogamestudio\" target=\"_blank\" rel=\"noopener\">etogamestudio</a><br>" +
+        "Discord: <a href=\"https://discord.gg/BjpDTVCkFB\" target=\"_blank\" rel=\"noopener\">discord.gg/BjpDTVCkFB</a>" },
+    { type: "image", tab: "posts", date: "2026-09-06", title: "Guess Who? Our Mascot \u2b50",
+      src: "assets/posts/guess-who-mascot.png",
+      text:
+        "The silhouette is all you get for now!! But can you figure out who\u2019s hiding behind the mystery? Drop your guess in the comments! \ud83d\udc47<br><br>" +
+        "Follow us everywhere:<br>" +
+        "Founder\u2019s Instagram: <a href=\"https://www.instagram.com/_ramanuz_/\" target=\"_blank\" rel=\"noopener\">@_ramanuz_</a><br>" +
+        "Twitter/X: <a href=\"https://twitter.com/etogamestudio\" target=\"_blank\" rel=\"noopener\">etogamestudio</a><br>" +
+        "Discord: <a href=\"https://discord.gg/BjpDTVCkFB\" target=\"_blank\" rel=\"noopener\">discord.gg/BjpDTVCkFB</a><br><br>" +
+        "<span class=\"post-tags\">#indiedev #buildingagame #mascot #2dgame #developer</span>" },
   ],
 
   /* ============================================================

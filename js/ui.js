@@ -375,14 +375,28 @@
   function renderPostsSection(root) {
     const tabsWrap = root.querySelector("#posts-tabs");
     const feed = root.querySelector("#posts-feed");
-    const games = C.GAMES || [];
     const posts = C.POSTS || [];
-    const tabs = [{ id: "all", title: "All" }].concat(games.map(g => ({ id: g.id, title: g.title })));
-    let active = "all";
+
+    // Three fixed content tabs. A post's `tab` field decides where it lands;
+    // if it's missing, fall back sensibly by media type (videos -> Videos,
+    // everything else -> Posts) so older entries still show up.
+    const tabs = [
+      { id: "posts",  title: "Posts" },
+      { id: "reels",  title: "Reels" },
+      { id: "videos", title: "Videos" }
+    ];
+    let active = "posts";
+
+    function tabOf(p) {
+      if (p.tab) return p.tab;
+      if (p.type === "video") return "videos";
+      if (p.type === "reel") return "reels";
+      return "posts";
+    }
 
     function renderTabs() {
       tabsWrap.innerHTML = "";
-      if (tabs.length < 2) { tabsWrap.classList.add("hidden"); return; }
+      tabsWrap.classList.remove("hidden");
       tabs.forEach(t => {
         const btn = document.createElement("button");
         btn.type = "button";
@@ -399,7 +413,7 @@
     }
 
     function renderFeed() {
-      const list = active === "all" ? posts : posts.filter(p => p.game === active);
+      const list = posts.filter(p => tabOf(p) === active);
       feed.innerHTML = "";
       if (!list.length) {
         feed.innerHTML = '<p class="fine">Will be uploaded soon.</p>';
@@ -416,6 +430,13 @@
             title="${p.title || "Video"}" frameborder="0" loading="lazy"
             allow="accelerometer; encrypted-media; picture-in-picture"
             allowfullscreen></iframe></div>`;
+        } else if (p.type === "reel" && p.src) {
+          // Self-hosted vertical video (a reel). Uses the native player with
+          // controls; muted + playsinline so mobile browsers allow it to sit
+          // inline rather than forcing fullscreen. `poster` is optional.
+          media = `<div class="reel-wrap"><video class="reel-video"
+            src="${p.src}" ${p.poster ? `poster="${p.poster}"` : ""}
+            controls playsinline muted loop preload="metadata"></video></div>`;
         } else if (p.type === "image" && p.src) {
           media = `<img class="post-img" src="${p.src}" alt="${p.title || "Post image"}" loading="lazy"
                     onerror="this.classList.add('missing')">`;
@@ -423,7 +444,11 @@
 
         card.innerHTML =
           `<header>
-             <span class="post-type">${p.type === "video" ? "▶ VIDEO" : p.type === "image" ? "◫ IMAGE" : "✦ POST"}</span>
+             <span class="post-type">${
+               p.type === "video" ? "▶ VIDEO" :
+               p.type === "reel"  ? "◉ REEL"  :
+               p.type === "image" ? "◫ IMAGE" : "✦ POST"
+             }</span>
              <span class="post-date">${p.date || ""}</span>
            </header>
            <h3>${p.title || ""}</h3>
