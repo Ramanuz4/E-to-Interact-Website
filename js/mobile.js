@@ -12,8 +12,14 @@
    show the same sections, team, games and posts.
    ============================================================ */
 (function () {
-  if (!ETI.isMobileLayout) return;   // desktop runs main.js instead
   const C = ETI.CONFIG;
+  const bpQuery = window.matchMedia("(max-width:1023px), (max-height:420px)");
+
+  let initialized = false;
+
+  function initMobile() {
+    if (initialized) return;   // set up once, never twice
+    initialized = true;
 
   const appEl        = document.getElementById("mobile-app");
   const briefEl       = document.getElementById("mob-brief");
@@ -147,15 +153,27 @@
     ev.preventDefault();
   }, { passive: false });
 
-  /* ---------- if the viewport crosses the mobile/desktop breakpoint after
-     load (e.g. a desktop window resized past it), reload so the right
-     experience initializes cleanly rather than trying to hot-swap it ---- */
-  const bpQuery = window.matchMedia("(max-width:1023px), (max-height:420px)");
-  window.addEventListener("resize", () => {
-    if (bpQuery.matches !== ETI.isMobileLayout) location.reload();
-  });
+    render({ silent: true });
+    // first-visit greeting, slightly delayed so it doesn't fire before layout settles
+    setTimeout(() => showBrief(SECTIONS[0].enterLine), 500);
+  } // end initMobile
 
-  render({ silent: true });
-  // first-visit greeting, slightly delayed so it doesn't fire before layout settles
-  setTimeout(() => showBrief(SECTIONS[0].enterLine), 500);
+  /* ---------- decide which experience runs ----------
+     If the viewport is mobile-sized at load, set up the mobile UI now.
+     If it starts at desktop size, main.js runs the free-roam game instead;
+     but if the window is later dragged narrow across the breakpoint, spin
+     the mobile UI up on the spot (no reload needed) — this is what fixes the
+     "empty shell, dead buttons" state when resizing a desktop window down.
+     Going the other way (mobile → desktop) can't hot-swap the game back in,
+     so that one direction reloads once to hand control to main.js. */
+  if (bpQuery.matches) initMobile();
+
+  bpQuery.addEventListener("change", (e) => {
+    if (e.matches) {
+      initMobile();                       // became mobile-sized → start mobile UI
+    } else if (initialized) {
+      location.reload();                  // mobile → desktop → reload into the game
+    }
+  });
 })();
+
