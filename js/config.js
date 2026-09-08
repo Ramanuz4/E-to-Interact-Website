@@ -113,7 +113,7 @@ ETI.CONFIG = {
       ] },
 
     /* — Forest (About Us) — Anushka leads design; the origin story is hers to tell. */
-    { id: "anushka", zone: "forest", x: 210, y: 0.74, name: "Anushka Srivastave", kind: "ranger",
+    { id: "anushka", zone: "forest", x: 210, y: 0.74, name: "Anushka Srivastava", kind: "ranger",
       lines: [
         "Anushka — I lead game design. This forest was the first thing we ever built.",
         "The sign up ahead tells our story properly. Worth a read.",
@@ -153,14 +153,7 @@ ETI.CONFIG = {
         "Night shift hits different. Monitors glow brighter when everything else goes dark."
       ] },
 
-    /* — Space Station (Posts) — Lucio broadcasts what we're making. */
-    { id: "lucio", zone: "space", x: -160, y: 0.54, name: "Lucio T", kind: "pilot",
-      lines: [
-        "Lucio, marketing. If you've seen anything of ours online, it left from this station.",
-        "Orbit's quiet. Good place to broadcast what we're building.",
-        "Press P from anywhere to see everything we've posted so far.",
-        "That planet drifts past every few hours. I still wave. Every time."
-      ] },
+    /* — Space Station (Posts) — no NPC stationed here. */
 
     /* — Sky Temple (Contact) — Saugata handles sound; the temple hums. */
     { id: "saugata", zone: "temple", x: 140, y: 0.62, name: "Saugata Deb", kind: "mystic",
@@ -169,15 +162,6 @@ ETI.CONFIG = {
         "Stand still a moment. This place has a hum. I tuned it that way.",
         "At night the orbs ring louder. Listen right after the clock turns.",
         "The contact sign is just ahead. Send us something — we actually read all of it."
-      ] },
-
-    /* — Bridge crossing — Ashmeet edits; a river is a good place to wait for the cut. */
-    { id: "ashmeet", zone: "bridge", x: 165, y: 0.42, name: "Ashmeet Singh", kind: "angler",
-      lines: [
-        "Ashmeet — I cut the videos. Editing is mostly waiting for the right moment, like this.",
-        "Mist off the river, lamps on the planks. That's a shot, whether I film it or not.",
-        "Castle's just past here. Mind your step — those boards are older than they look.",
-        "On a clear night the stars land in the water. I've never got that on camera properly."
       ] }
   ],
 
